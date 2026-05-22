@@ -123,7 +123,7 @@ export const snaptradeSync = createServerFn({ method: "POST" })
 
         const payload = {
           user_id: userId,
-          asset_type: ticker.length <= 5 ? "STOCK_US" : "ETF",
+          asset_type: (ticker.length <= 5 ? "STOCK_US" : "ETF") as "STOCK_US" | "ETF",
           ticker,
           name,
           platform: `SnapTrade · ${brokerName}`,
