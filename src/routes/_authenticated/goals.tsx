@@ -244,7 +244,7 @@ function GoalsPage() {
       {/* Add goal dialog */}
       <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditingId(null); }}>
         <DialogContent>
-          <DialogHeader><DialogTitle>{editingId ? t("edit") : t("addGoal")}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editingId ? "Editar meta" : t("addGoal")}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div><Label>{t("goalName")}</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
             <div className="grid grid-cols-[1fr_120px] gap-2">
