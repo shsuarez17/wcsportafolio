@@ -66,6 +66,9 @@ export function AssetManager({
     },
   });
 
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 10;
+
   const allMatching = (q.data ?? []).filter((h) =>
     customTypeName
       ? (h.ticker?.toUpperCase() === customTypeName.toUpperCase().slice(0, 8))
@@ -82,10 +85,10 @@ export function AssetManager({
     );
   }, [allMatching, search]);
 
-  // Aggregated summary: group by name + asset_type, sum invested USD
+  // Aggregated summary: built from ALL matching (search does not alter totals)
   const summary = useMemo(() => {
     const map = new Map<string, { name: string; type: string; invested_usd: number; count: number }>();
-    for (const h of items) {
+    for (const h of allMatching) {
       const key = `${h.asset_type}::${h.name.toLowerCase()}`;
       const inv = Number(h.quantity) * Number(h.avg_cost_usd);
       const e = map.get(key) ?? { name: h.name, type: h.asset_type, invested_usd: 0, count: 0 };
@@ -94,11 +97,33 @@ export function AssetManager({
       map.set(key, e);
     }
     return Array.from(map.values()).sort((a, b) => b.invested_usd - a.invested_usd);
-  }, [items]);
+  }, [allMatching]);
 
   const totalUsd = summary.reduce((a, s) => a + s.invested_usd, 0);
   const numAssets = summary.length;
   const rate = rates[viewCcy] || 1;
+
+  // Chart data: when searching, show only filtered slices (still as % of full total)
+  const chartData = useMemo(() => {
+    const s = search.trim().toLowerCase();
+    const base = !s
+      ? summary
+      : summary.filter((x) =>
+          x.name.toLowerCase().includes(s) ||
+          (BUILTIN_TYPE_LABELS[x.type] ?? x.type).toLowerCase().includes(s)
+        );
+    return base.map((x) => ({
+      name: x.name,
+      value: x.invested_usd,
+      pct: totalUsd ? x.invested_usd / totalUsd : 0,
+    }));
+  }, [summary, search, totalUsd]);
+
+  // Reset to page 1 when filter/data shrinks
+  const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+  useEffect(() => { if (page > totalPages) setPage(1); }, [page, totalPages]);
+  useEffect(() => { setPage(1); }, [search]);
+  const pageItems = items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const del = useMutation({
     mutationFn: async (id: string) => {
@@ -182,11 +207,24 @@ export function AssetManager({
             <div className="h-56">
               <ResponsiveContainer>
                 <PieChart>
-                  <Pie data={summary.map((s) => ({ name: s.name, value: s.invested_usd }))}
-                       dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} paddingAngle={2}>
-                    {summary.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                  <Pie
+                    data={chartData}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={2}
+                    label={({ pct }: any) => (pct >= 0.03 ? `${(pct * 100).toFixed(1)}%` : "")}
+                    labelLine={false}
+                  >
+                    {chartData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
                   </Pie>
-                  <RTooltip formatter={(v: number) => fmtUSD(v)} contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12 }} />
+                  <RTooltip
+                    formatter={(v: number, _n, p: any) => [`${fmtUSD(v)} (${((p?.payload?.pct ?? 0) * 100).toFixed(2)}%)`, p?.payload?.name]}
+                    contentStyle={{ background: "rgba(0,0,0,0.85)", border: "1px solid var(--border)", borderRadius: 12, color: "#fff" }}
+                    itemStyle={{ color: "#fff" }}
+                    labelStyle={{ color: "#fff" }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -213,7 +251,7 @@ export function AssetManager({
                 </tr>
               </thead>
               <tbody>
-                {items.map((h) => {
+                {pageItems.map((h) => {
                   const inv = Number(h.quantity) * Number(h.avg_cost_usd);
                   return (
                     <tr key={h.id} className="border-t border-border hover:bg-muted/30">
@@ -240,6 +278,28 @@ export function AssetManager({
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+        {items.length > PAGE_SIZE && (
+          <div className="flex items-center justify-between gap-2 p-3 text-sm">
+            <span className="text-xs text-muted-foreground font-mono">
+              {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, items.length)} / {items.length}
+            </span>
+            <div className="flex items-center gap-1">
+              <Button size="sm" variant="ghost" disabled={page <= 1} onClick={() => setPage(page - 1)}>‹</Button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <Button
+                  key={p}
+                  size="sm"
+                  variant={p === page ? "default" : "ghost"}
+                  onClick={() => setPage(p)}
+                  className="w-8 h-8 p-0"
+                >
+                  {p}
+                </Button>
+              ))}
+              <Button size="sm" variant="ghost" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>›</Button>
+            </div>
           </div>
         )}
       </div>
