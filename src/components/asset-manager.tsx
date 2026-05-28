@@ -251,7 +251,7 @@ export function AssetManager({
                 </tr>
               </thead>
               <tbody>
-                {items.map((h) => {
+                {pageItems.map((h) => {
                   const inv = Number(h.quantity) * Number(h.avg_cost_usd);
                   return (
                     <tr key={h.id} className="border-t border-border hover:bg-muted/30">
@@ -278,6 +278,28 @@ export function AssetManager({
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+        {items.length > PAGE_SIZE && (
+          <div className="flex items-center justify-between gap-2 p-3 text-sm">
+            <span className="text-xs text-muted-foreground font-mono">
+              {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, items.length)} / {items.length}
+            </span>
+            <div className="flex items-center gap-1">
+              <Button size="sm" variant="ghost" disabled={page <= 1} onClick={() => setPage(page - 1)}>‹</Button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <Button
+                  key={p}
+                  size="sm"
+                  variant={p === page ? "default" : "ghost"}
+                  onClick={() => setPage(p)}
+                  className="w-8 h-8 p-0"
+                >
+                  {p}
+                </Button>
+              ))}
+              <Button size="sm" variant="ghost" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>›</Button>
+            </div>
           </div>
         )}
       </div>
