@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, AreaChart, Area, XAxis, YAxis, CartesianGrid } from "recharts";
-import { RefreshCw, Wallet, LineChart as LineChartIcon, Bitcoin, Layers } from "lucide-react";
+import { RefreshCw, Wallet, LineChart as LineChartIcon, Bitcoin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fmtPct, fmtUSD, fmtCurrency } from "@/lib/format";
@@ -174,11 +174,10 @@ function Dashboard() {
         />
       </div>
 
-      <div className="grid md:grid-cols-4 gap-4">
+      <div className="grid md:grid-cols-3 gap-4">
         <StatCard label={`Total · ${t("numAssets")}`} value={String(counts.stocks + counts.crypto + counts.custom)} icon={<Wallet className="size-4" />} accent="primary" />
         <StatCard label={`${t("stocks")}`} value={String(counts.stocks)} icon={<LineChartIcon className="size-4" />} muted />
         <StatCard label={`${t("crypto")}`} value={String(counts.crypto)} icon={<Bitcoin className="size-4" />} muted />
-        <StatCard label={`${t("customSheets")}`} value={String(counts.custom)} icon={<Layers className="size-4" />} muted />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4">
