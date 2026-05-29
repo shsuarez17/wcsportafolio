@@ -174,11 +174,10 @@ function Dashboard() {
         />
       </div>
 
-      <div className="grid md:grid-cols-4 gap-4">
+      <div className="grid md:grid-cols-3 gap-4">
         <StatCard label={`Total · ${t("numAssets")}`} value={String(counts.stocks + counts.crypto + counts.custom)} icon={<Wallet className="size-4" />} accent="primary" />
         <StatCard label={`${t("stocks")}`} value={String(counts.stocks)} icon={<LineChartIcon className="size-4" />} muted />
         <StatCard label={`${t("crypto")}`} value={String(counts.crypto)} icon={<Bitcoin className="size-4" />} muted />
-        <StatCard label={`${t("customSheets")}`} value={String(counts.custom)} icon={<Layers className="size-4" />} muted />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4">
