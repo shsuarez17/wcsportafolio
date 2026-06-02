@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useI18n } from "@/lib/i18n";
 import { fmtCurrency, fmtUSD, fmtNum, fmtPct } from "@/lib/format";
-import { useProfile, useUsdRates, CURRENCIES, type Currency } from "@/lib/use-profile";
+import { useProfile, useUsdRates, CURRENCIES, DEFAULT_CURRENCIES, type Currency } from "@/lib/use-profile";
 import { toast } from "sonner";
 
 type AssetType = Database["public"]["Enums"]["asset_type"];
@@ -47,6 +47,8 @@ export function AssetManager({
   const ratesQ = useUsdRates();
   const baseCcy = (profileQ.data?.base_currency ?? "USD") as Currency;
   const rates = ratesQ.data ?? { USD: 1, COP: 4000, EUR: 0.92, MXN: 18, BRL: 5 };
+  const customCcy = profileQ.data?.custom_currencies ?? [];
+  const allCcy = Array.from(new Set([...DEFAULT_CURRENCIES, ...customCcy]));
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Investment | null>(null);
@@ -150,7 +152,7 @@ export function AssetManager({
           <Select value={viewCcy} onValueChange={(v) => setViewCcy(v as Currency)}>
             <SelectTrigger className="w-[100px]"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {CURRENCIES.filter((c) => c !== "USD").map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              {allCcy.filter((c) => c !== "USD").map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
             </SelectContent>
           </Select>
           <Button onClick={() => { setEditing(null); setOpen(true); }}>
