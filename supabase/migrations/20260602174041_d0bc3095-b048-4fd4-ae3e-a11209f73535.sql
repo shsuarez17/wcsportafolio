@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS custom_currencies text[] NOT NULL DEFAULT '{}'::text[];
