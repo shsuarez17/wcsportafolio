@@ -12,7 +12,13 @@ function CustomSheetPage() {
     <AssetManager
       title={decoded}
       defaultType="STOCK_US"
-      allowedTypes={[{ value: "STOCK_US", label: decoded }]}
+      allowedTypes={[
+        { value: "STOCK_US", label: "Acciones EEUU" },
+        { value: "STOCK_CO", label: "Acciones COL" },
+        { value: "ETF", label: "ETF" },
+        { value: "BOND", label: "Bonos" },
+        { value: "CRYPTO", label: "Cripto" },
+      ]}
       filterTypes={[]}
       customTypeName={decoded}
     />
