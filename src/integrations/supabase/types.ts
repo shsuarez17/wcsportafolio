@@ -193,7 +193,6 @@ export type Database = {
           base_currency: string
           created_at: string
           custom_asset_types: string[]
-          custom_currencies: string[]
           display_name: string | null
           id: string
           language: string
@@ -203,7 +202,6 @@ export type Database = {
           base_currency?: string
           created_at?: string
           custom_asset_types?: string[]
-          custom_currencies?: string[]
           display_name?: string | null
           id: string
           language?: string
@@ -213,7 +211,6 @@ export type Database = {
           base_currency?: string
           created_at?: string
           custom_asset_types?: string[]
-          custom_currencies?: string[]
           display_name?: string | null
           id?: string
           language?: string

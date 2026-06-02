@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { LayoutDashboard, LineChart, Bitcoin, Target, Repeat, Settings, Plus, Pencil, Trash2, ArrowDownUp, RefreshCw, CalendarIcon, Layers } from "lucide-react";
+import { LayoutDashboard, LineChart, Bitcoin, Target, Repeat, Settings, Plus, Pencil, Trash2, ArrowDownUp, RefreshCw, CalendarIcon } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
-import { useProfile } from "@/lib/use-profile";
 
 export const Route = createFileRoute("/_authenticated/guide")({
   component: GuidePage,
@@ -9,8 +8,6 @@ export const Route = createFileRoute("/_authenticated/guide")({
 
 function GuidePage() {
   const { t, lang } = useI18n();
-  const profileQ = useProfile();
-  const customPanels = profileQ.data?.custom_asset_types ?? [];
 
   const sections = lang === "es" ? [
     {
@@ -46,21 +43,6 @@ function GuidePage() {
     { icon: Settings, title: "Settings", desc: "Change language, base currency and other account preferences." },
   ];
 
-  const customDesc = lang === "es"
-    ? (n: string) => `Panel personalizado "${n}". Funciona igual que Acciones o Cripto: añade activos, montos, busca y visualiza gráficos.`
-    : lang === "en"
-    ? (n: string) => `Custom panel "${n}". Works just like Stocks or Crypto: add assets, amounts, search and view charts.`
-    : lang === "fr"
-    ? (n: string) => `Panneau personnalisé "${n}". Fonctionne comme Actions ou Crypto.`
-    : lang === "it"
-    ? (n: string) => `Pannello personalizzato "${n}". Funziona come Azioni o Cripto.`
-    : (n: string) => `Benutzerdefiniertes Panel "${n}". Funktioniert wie Aktien oder Krypto.`;
-
-  const allSections = [
-    ...sections,
-    ...customPanels.map((n) => ({ icon: Layers, title: n, desc: customDesc(n) })),
-  ];
-
   const icons = lang === "es" ? [
     { icon: Plus, label: "Añadir", desc: "Crea un nuevo registro (activo, meta o aporte)." },
     { icon: Pencil, label: "Editar", desc: "Modifica un registro existente." },
@@ -91,7 +73,7 @@ function GuidePage() {
       <section>
         <h2 className="text-xl font-display font-semibold mb-3">{lang === "es" ? "Secciones" : "Sections"}</h2>
         <div className="grid md:grid-cols-2 gap-3">
-          {allSections.map((s) => (
+          {sections.map((s) => (
             <div key={s.title} className="card-surface p-4 flex gap-3">
               <div className="size-10 rounded-lg bg-primary/15 text-primary flex items-center justify-center shrink-0">
                 <s.icon className="size-5" />

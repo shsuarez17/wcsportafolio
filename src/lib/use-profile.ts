@@ -6,7 +6,6 @@ export type ProfileData = {
   language: string;
   base_currency: string;
   custom_asset_types: string[];
-  custom_currencies: string[];
 };
 
 export function useProfile() {
@@ -17,7 +16,7 @@ export function useProfile() {
       if (!u.user) throw new Error("not authenticated");
       const { data, error } = await supabase
         .from("profiles")
-        .select("display_name, language, base_currency, custom_asset_types, custom_currencies")
+        .select("display_name, language, base_currency, custom_asset_types")
         .eq("id", u.user.id)
         .maybeSingle();
       if (error) throw error;
@@ -26,21 +25,13 @@ export function useProfile() {
         language: data?.language ?? "es",
         base_currency: data?.base_currency ?? "USD",
         custom_asset_types: (data?.custom_asset_types as string[] | null) ?? [],
-        custom_currencies: ((data as any)?.custom_currencies as string[] | null) ?? [],
       };
     },
   });
 }
 
-export const DEFAULT_CURRENCIES = ["USD", "COP", "EUR", "MXN", "BRL"] as const;
-export const CURRENCIES: readonly string[] = DEFAULT_CURRENCIES;
-export type Currency = string;
-
-export function useAllCurrencies(): string[] {
-  const p = useProfile();
-  const custom = p.data?.custom_currencies ?? [];
-  return Array.from(new Set([...DEFAULT_CURRENCIES, ...custom]));
-}
+export const CURRENCIES = ["USD", "COP", "EUR", "MXN", "BRL"] as const;
+export type Currency = (typeof CURRENCIES)[number];
 
 export function useUsdRates() {
   return useQuery({
@@ -49,18 +40,13 @@ export function useUsdRates() {
       const r = await fetch("https://open.er-api.com/v6/latest/USD");
       const j = r.ok ? await r.json() : {};
       const rates = (j?.rates ?? {}) as Record<string, number>;
-      // Return ALL currencies the API gives us (170+), plus sensible fallbacks
-      const all: Record<string, number> = {
+      return {
         USD: 1,
-        COP: 4000,
-        EUR: 0.92,
-        MXN: 18,
-        BRL: 5,
-        ...rates,
-        USD_FIXED: 1,
-      };
-      all.USD = 1;
-      return all as Record<string, number>;
+        COP: rates.COP ?? 4000,
+        EUR: rates.EUR ?? 0.92,
+        MXN: rates.MXN ?? 18,
+        BRL: rates.BRL ?? 5,
+      } as Record<Currency, number>;
     },
     staleTime: 10 * 60_000,
   });
