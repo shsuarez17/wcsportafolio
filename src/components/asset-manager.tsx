@@ -317,19 +317,21 @@ export function AssetManager({
         knownNames={Array.from(new Set((q.data ?? []).map((h) => h.name))).filter(Boolean)}
         customTypes={profileQ.data?.custom_asset_types ?? []}
         forceCustomTicker={customTypeName}
+        allCurrencies={allCcy}
       />
     </div>
   );
 }
 
 function AssetDialog({
-  open, onClose, editing, allowedTypes, defaultType, baseCurrency, rates, knownNames, customTypes, forceCustomTicker,
+  open, onClose, editing, allowedTypes, defaultType, baseCurrency, rates, knownNames, customTypes, forceCustomTicker, allCurrencies,
 }: {
   open: boolean; onClose: () => void; editing: Investment | null;
   allowedTypes: { value: AssetType; label: string }[]; defaultType: AssetType;
-  baseCurrency: Currency; rates: Record<Currency, number>;
+  baseCurrency: Currency; rates: Record<string, number>;
   knownNames: string[]; customTypes: string[];
   forceCustomTicker?: string;
+  allCurrencies: string[];
 }) {
   const { t } = useI18n();
   const qc = useQueryClient();
@@ -456,7 +458,7 @@ function AssetDialog({
               <Select value={form.currency} onValueChange={(v) => setForm({ ...form, currency: v as Currency })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {CURRENCIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  {allCurrencies.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -471,7 +473,7 @@ function AssetDialog({
               <Select value={viewCurrency} onValueChange={(v) => setViewCurrency(v as Currency)}>
                 <SelectTrigger className="w-[100px] h-8"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {CURRENCIES.filter((c) => c !== form.currency).map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  {allCurrencies.filter((c) => c !== form.currency).map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
