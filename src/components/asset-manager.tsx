@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useI18n } from "@/lib/i18n";
 import { fmtCurrency, fmtUSD, fmtNum, fmtPct } from "@/lib/format";
-import { useProfile, useUsdRates, CURRENCIES, type Currency } from "@/lib/use-profile";
+import { useProfile, useUsdRates, CURRENCIES, DEFAULT_CURRENCIES, type Currency } from "@/lib/use-profile";
 import { toast } from "sonner";
 
 type AssetType = Database["public"]["Enums"]["asset_type"];
@@ -47,6 +47,8 @@ export function AssetManager({
   const ratesQ = useUsdRates();
   const baseCcy = (profileQ.data?.base_currency ?? "USD") as Currency;
   const rates = ratesQ.data ?? { USD: 1, COP: 4000, EUR: 0.92, MXN: 18, BRL: 5 };
+  const customCcy = profileQ.data?.custom_currencies ?? [];
+  const allCcy = Array.from(new Set([...DEFAULT_CURRENCIES, ...customCcy]));
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Investment | null>(null);
@@ -150,7 +152,7 @@ export function AssetManager({
           <Select value={viewCcy} onValueChange={(v) => setViewCcy(v as Currency)}>
             <SelectTrigger className="w-[100px]"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {CURRENCIES.filter((c) => c !== "USD").map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              {allCcy.filter((c) => c !== "USD").map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
             </SelectContent>
           </Select>
           <Button onClick={() => { setEditing(null); setOpen(true); }}>
@@ -315,19 +317,21 @@ export function AssetManager({
         knownNames={Array.from(new Set((q.data ?? []).map((h) => h.name))).filter(Boolean)}
         customTypes={profileQ.data?.custom_asset_types ?? []}
         forceCustomTicker={customTypeName}
+        allCurrencies={allCcy}
       />
     </div>
   );
 }
 
 function AssetDialog({
-  open, onClose, editing, allowedTypes, defaultType, baseCurrency, rates, knownNames, customTypes, forceCustomTicker,
+  open, onClose, editing, allowedTypes, defaultType, baseCurrency, rates, knownNames, customTypes, forceCustomTicker, allCurrencies,
 }: {
   open: boolean; onClose: () => void; editing: Investment | null;
   allowedTypes: { value: AssetType; label: string }[]; defaultType: AssetType;
-  baseCurrency: Currency; rates: Record<Currency, number>;
+  baseCurrency: Currency; rates: Record<string, number>;
   knownNames: string[]; customTypes: string[];
   forceCustomTicker?: string;
+  allCurrencies: string[];
 }) {
   const { t } = useI18n();
   const qc = useQueryClient();
@@ -454,7 +458,7 @@ function AssetDialog({
               <Select value={form.currency} onValueChange={(v) => setForm({ ...form, currency: v as Currency })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {CURRENCIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  {allCurrencies.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -469,7 +473,7 @@ function AssetDialog({
               <Select value={viewCurrency} onValueChange={(v) => setViewCurrency(v as Currency)}>
                 <SelectTrigger className="w-[100px] h-8"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {CURRENCIES.filter((c) => c !== form.currency).map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  {allCurrencies.filter((c) => c !== form.currency).map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
