@@ -114,6 +114,9 @@ const dict = {
     distributionPct: "% por activo",
     overflow: "Sobrepasado",
     backToHome: "Volver al inicio",
+    subtypesHelp: "Tipos de activo disponibles al añadir en este panel",
+    newSubtypePlaceholder: "Nuevo tipo (ej: Acciones EEUU)",
+    addSubtype: "Añadir tipo",
   },
   en: {
     appName: "Portfolio",
@@ -226,6 +229,9 @@ const dict = {
     distributionPct: "% per asset",
     overflow: "Over goal",
     backToHome: "Back to home",
+    subtypesHelp: "Asset types available when adding to this panel",
+    newSubtypePlaceholder: "New type (e.g. US Stocks)",
+    addSubtype: "Add type",
   },
 } as const;
 

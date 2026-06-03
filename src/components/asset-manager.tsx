@@ -401,7 +401,7 @@ function AssetDialog({
 
   const typeOptions = [
     ...allowedTypes.map((o) => ({ value: o.value as string, label: o.label })),
-    ...customTypes.map((c) => ({ value: c, label: c })),
+    ...(forceCustomTicker ? [] : customTypes.map((c) => ({ value: c, label: c }))),
   ];
 
   return (

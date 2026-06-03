@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS custom_panel_subtypes jsonb NOT NULL DEFAULT '{}'::jsonb;
