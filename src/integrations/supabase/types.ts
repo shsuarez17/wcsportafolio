@@ -105,6 +105,7 @@ export type Database = {
           created_at: string
           currency: string
           current_price_usd: number
+          custom_type: string | null
           external_id: string | null
           id: string
           name: string
@@ -124,6 +125,7 @@ export type Database = {
           created_at?: string
           currency?: string
           current_price_usd?: number
+          custom_type?: string | null
           external_id?: string | null
           id?: string
           name: string
@@ -143,6 +145,7 @@ export type Database = {
           created_at?: string
           currency?: string
           current_price_usd?: number
+          custom_type?: string | null
           external_id?: string | null
           id?: string
           name?: string
