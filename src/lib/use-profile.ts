@@ -6,6 +6,7 @@ export type ProfileData = {
   language: string;
   base_currency: string;
   custom_asset_types: string[];
+  custom_panel_subtypes: Record<string, string[]>;
 };
 
 export function useProfile() {
@@ -16,7 +17,7 @@ export function useProfile() {
       if (!u.user) throw new Error("not authenticated");
       const { data, error } = await supabase
         .from("profiles")
-        .select("display_name, language, base_currency, custom_asset_types")
+        .select("display_name, language, base_currency, custom_asset_types, custom_panel_subtypes")
         .eq("id", u.user.id)
         .maybeSingle();
       if (error) throw error;
@@ -25,6 +26,8 @@ export function useProfile() {
         language: data?.language ?? "es",
         base_currency: data?.base_currency ?? "USD",
         custom_asset_types: (data?.custom_asset_types as string[] | null) ?? [],
+        custom_panel_subtypes:
+          ((data as any)?.custom_panel_subtypes as Record<string, string[]> | null) ?? {},
       };
     },
   });
