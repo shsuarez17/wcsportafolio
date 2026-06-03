@@ -89,9 +89,10 @@ export function AssetManager({
   const summary = useMemo(() => {
     const map = new Map<string, { name: string; type: string; invested_usd: number; count: number }>();
     for (const h of allMatching) {
-      const key = `${h.asset_type}::${h.name.toLowerCase()}`;
+      const typeLabel = (h as any).custom_type || h.asset_type;
+      const key = `${typeLabel}::${h.name.toLowerCase()}`;
       const inv = Number(h.quantity) * Number(h.avg_cost_usd);
-      const e = map.get(key) ?? { name: h.name, type: h.asset_type, invested_usd: 0, count: 0 };
+      const e = map.get(key) ?? { name: h.name, type: typeLabel, invested_usd: 0, count: 0 };
       e.invested_usd += inv;
       e.count += 1;
       map.set(key, e);
@@ -255,11 +256,11 @@ export function AssetManager({
                   const inv = Number(h.quantity) * Number(h.avg_cost_usd);
                   return (
                     <tr key={h.id} className="border-t border-border hover:bg-muted/30">
-                      <td className="p-3">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted text-xs font-semibold">
-                          {BUILTIN_TYPE_LABELS[h.asset_type] ?? h.asset_type}
-                        </span>
-                      </td>
+                       <td className="p-3">
+                         <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted text-xs font-semibold">
+                           {(h as any).custom_type || BUILTIN_TYPE_LABELS[h.asset_type] || h.asset_type}
+                         </span>
+                       </td>
                       <td className="font-semibold">{h.name}</td>
                       <td className="text-muted-foreground">{h.platform ?? "—"}</td>
                       <td className="text-muted-foreground tabular text-xs">{h.purchase_date ?? "—"}</td>
@@ -372,6 +373,7 @@ function AssetDialog({
         user_id: u.user.id,
         // Built-in enum types only persisted as enum; custom types are recorded in name/ticker
         asset_type: (allowedTypes.some((a) => a.value === form.asset_type) ? form.asset_type : defaultType) as AssetType,
+        custom_type: allowedTypes.some((a) => a.value === form.asset_type) ? null : form.asset_type,
         ticker: (forceCustomTicker ?? (form.name.trim().slice(0, 8) || form.asset_type)).toUpperCase().slice(0, 8),
         name: form.name.trim() || form.asset_type,
         platform: form.platform.trim() || null,
