@@ -197,6 +197,7 @@ export type Database = {
           created_at: string
           custom_asset_types: string[]
           custom_currencies: string[]
+          custom_panel_subtypes: Json
           display_name: string | null
           id: string
           language: string
@@ -207,6 +208,7 @@ export type Database = {
           created_at?: string
           custom_asset_types?: string[]
           custom_currencies?: string[]
+          custom_panel_subtypes?: Json
           display_name?: string | null
           id: string
           language?: string
@@ -217,6 +219,7 @@ export type Database = {
           created_at?: string
           custom_asset_types?: string[]
           custom_currencies?: string[]
+          custom_panel_subtypes?: Json
           display_name?: string | null
           id?: string
           language?: string
