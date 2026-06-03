@@ -24,18 +24,22 @@ function SettingsPage() {
   const [baseCurrency, setBaseCurrency] = useState<Currency>("USD");
   const [types, setTypes] = useState<string[]>([]);
   const [newType, setNewType] = useState("");
+  const [subtypes, setSubtypes] = useState<Record<string, string[]>>({});
+  const [newSubtype, setNewSubtype] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!profileQ.data) return;
     setName(profileQ.data.display_name ?? "");
     setBaseCurrency((profileQ.data.base_currency as Currency) ?? "USD");
     setTypes(profileQ.data.custom_asset_types ?? []);
+    setSubtypes(profileQ.data.custom_panel_subtypes ?? {});
   }, [profileQ.data]);
 
-  const persistTypes = async (next: string[]) => {
+  const persistTypes = async (next: string[], nextSubtypes?: Record<string, string[]>) => {
     if (!user) return;
     const { error } = await supabase.from("profiles").update({
       custom_asset_types: next,
+      ...(nextSubtypes ? { custom_panel_subtypes: nextSubtypes as any } : {}),
     }).eq("id", user.id);
     if (error) {
       toast.error(error.message);
@@ -49,9 +53,11 @@ function SettingsPage() {
     const v = newType.trim();
     if (!v || types.includes(v)) return;
     const next = [...types, v];
+    const nextSubs = { ...subtypes, [v]: subtypes[v] ?? [] };
     setTypes(next);
+    setSubtypes(nextSubs);
     setNewType("");
-    const ok = await persistTypes(next);
+    const ok = await persistTypes(next, nextSubs);
     if (ok) {
       toast.success(t("saved"));
       navigate({ to: "/custom/$type", params: { type: v } });
@@ -59,8 +65,28 @@ function SettingsPage() {
   };
   const removeType = async (v: string) => {
     const next = types.filter((x) => x !== v);
+    const nextSubs = { ...subtypes };
+    delete nextSubs[v];
     setTypes(next);
-    await persistTypes(next);
+    setSubtypes(nextSubs);
+    await persistTypes(next, nextSubs);
+  };
+
+  const addSubtype = async (panel: string) => {
+    const v = (newSubtype[panel] ?? "").trim();
+    if (!v) return;
+    const existing = subtypes[panel] ?? [];
+    if (existing.includes(v)) return;
+    const nextSubs = { ...subtypes, [panel]: [...existing, v] };
+    setSubtypes(nextSubs);
+    setNewSubtype({ ...newSubtype, [panel]: "" });
+    await persistTypes(types, nextSubs);
+  };
+
+  const removeSubtype = async (panel: string, v: string) => {
+    const nextSubs = { ...subtypes, [panel]: (subtypes[panel] ?? []).filter((x) => x !== v) };
+    setSubtypes(nextSubs);
+    await persistTypes(types, nextSubs);
   };
 
   const save = async () => {
@@ -70,6 +96,7 @@ function SettingsPage() {
       language: lang,
       base_currency: baseCurrency,
       custom_asset_types: types,
+      custom_panel_subtypes: subtypes as any,
     }).eq("id", user.id);
     if (error) toast.error(error.message);
     else {
@@ -118,20 +145,50 @@ function SettingsPage() {
           {types.length > 0 && (
             <div className="grid gap-2 mt-4">
               {types.map((tp) => (
-                <div key={tp} className="flex items-center justify-between gap-2 rounded-md border border-border bg-muted/40 px-3 py-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Layers className="size-4 text-primary shrink-0" />
-                    <span className="text-sm truncate">{tp}</span>
+                <div key={tp} className="rounded-md border border-border bg-muted/40 px-3 py-2 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Layers className="size-4 text-primary shrink-0" />
+                      <span className="text-sm font-semibold truncate">{tp}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Link to="/custom/$type" params={{ type: tp }}>
+                        <Button type="button" variant="ghost" size="sm">
+                          <ExternalLink className="size-3.5 mr-1" />{t("openPanel")}
+                        </Button>
+                      </Link>
+                      <button type="button" onClick={() => removeType(tp)} className="p-1 text-muted-foreground hover:text-destructive" aria-label={t("delete")}>
+                        <X className="size-4" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Link to="/custom/$type" params={{ type: tp }}>
-                      <Button type="button" variant="ghost" size="sm">
-                        <ExternalLink className="size-3.5 mr-1" />{t("openPanel")}
+                  <div className="pl-6 space-y-2">
+                    <p className="text-xs text-muted-foreground">{t("subtypesHelp")}</p>
+                    <div className="flex flex-wrap gap-1">
+                      {(subtypes[tp] ?? []).map((s) => (
+                        <span key={s} className="inline-flex items-center gap-1 rounded-full bg-background border border-border px-2 py-0.5 text-xs">
+                          {s}
+                          <button type="button" onClick={() => removeSubtype(tp, s)} className="text-muted-foreground hover:text-destructive" aria-label={t("delete")}>
+                            <X className="size-3" />
+                          </button>
+                        </span>
+                      ))}
+                      {(subtypes[tp] ?? []).length === 0 && (
+                        <span className="text-xs text-muted-foreground italic">—</span>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <Input
+                        value={newSubtype[tp] ?? ""}
+                        onChange={(e) => setNewSubtype({ ...newSubtype, [tp]: e.target.value })}
+                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSubtype(tp); } }}
+                        placeholder={t("newSubtypePlaceholder")}
+                        className="h-8 text-sm"
+                      />
+                      <Button type="button" variant="secondary" size="sm" onClick={() => addSubtype(tp)}>
+                        <Plus className="size-3.5 mr-1" />{t("addSubtype")}
                       </Button>
-                    </Link>
-                    <button type="button" onClick={() => removeType(tp)} className="p-1 text-muted-foreground hover:text-destructive" aria-label={t("delete")}>
-                      <X className="size-4" />
-                    </button>
+                    </div>
                   </div>
                 </div>
               ))}
