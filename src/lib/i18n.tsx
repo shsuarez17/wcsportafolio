@@ -113,6 +113,7 @@ const dict = {
     customSheets: "Hojas personalizadas",
     distributionPct: "% por activo",
     overflow: "Sobrepasado",
+    backToHome: "Volver al inicio",
   },
   en: {
     appName: "Portfolio",
@@ -224,6 +225,7 @@ const dict = {
     customSheets: "Custom sheets",
     distributionPct: "% per asset",
     overflow: "Over goal",
+    backToHome: "Back to home",
   },
 } as const;
 
