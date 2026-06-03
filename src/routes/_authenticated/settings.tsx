@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Plus, X, Layers, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +19,7 @@ function SettingsPage() {
   const { user } = useAuth();
   const profileQ = useProfile();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [baseCurrency, setBaseCurrency] = useState<Currency>("USD");
   const [types, setTypes] = useState<string[]>([]);
@@ -31,13 +32,36 @@ function SettingsPage() {
     setTypes(profileQ.data.custom_asset_types ?? []);
   }, [profileQ.data]);
 
-  const addType = () => {
+  const persistTypes = async (next: string[]) => {
+    if (!user) return;
+    const { error } = await supabase.from("profiles").update({
+      custom_asset_types: next,
+    }).eq("id", user.id);
+    if (error) {
+      toast.error(error.message);
+      return false;
+    }
+    await qc.invalidateQueries({ queryKey: ["profile"] });
+    return true;
+  };
+
+  const addType = async () => {
     const v = newType.trim();
     if (!v || types.includes(v)) return;
-    setTypes([...types, v]);
+    const next = [...types, v];
+    setTypes(next);
     setNewType("");
+    const ok = await persistTypes(next);
+    if (ok) {
+      toast.success(t("saved"));
+      navigate({ to: "/custom/$type", params: { type: v } });
+    }
   };
-  const removeType = (v: string) => setTypes(types.filter((x) => x !== v));
+  const removeType = async (v: string) => {
+    const next = types.filter((x) => x !== v);
+    setTypes(next);
+    await persistTypes(next);
+  };
 
   const save = async () => {
     if (!user) return;
