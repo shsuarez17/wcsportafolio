@@ -1,6 +1,7 @@
 import { createFileRoute, redirect, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { ArrowLeft } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
@@ -55,6 +56,9 @@ function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4 relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "var(--gradient-hero)" }} />
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card-surface p-8 w-full max-w-md relative z-10">
+        <Link to="/" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mb-4">
+          <ArrowLeft className="size-3.5" /> {t("backToHome")}
+        </Link>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <div className="size-8 rounded-lg" style={{ backgroundImage: "var(--gradient-primary)" }} />
