@@ -71,7 +71,7 @@ export function AssetManager({
 
   const allMatching = (q.data ?? []).filter((h) =>
     customTypeName
-      ? (h.ticker?.toUpperCase() === customTypeName.toUpperCase().slice(0, 8))
+      ? ((h as any).custom_type === customTypeName || h.ticker?.toUpperCase() === customTypeName.toUpperCase().slice(0, 8))
       : filterTypes.includes(h.asset_type)
   );
 
