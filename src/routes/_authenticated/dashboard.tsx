@@ -351,9 +351,17 @@ function Dashboard() {
               map.set(key, e);
             }
             const rows = Array.from(map.values()).sort((a, b) => b.invested - a.invested);
-            const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+            const f = filters;
+            const filtered = rows.filter((r) => {
+              if (f.name && !r.name.toLowerCase().includes(f.name.toLowerCase())) return false;
+              if (f.type && !r.type.toLowerCase().includes(f.type.toLowerCase())) return false;
+              if (f.usd && !String(Math.round(r.invested)).includes(f.usd.replace(/\D/g, ""))) return false;
+              if (f.view && !String(Math.round(r.invested * rate)).includes(f.view.replace(/\D/g, ""))) return false;
+              return true;
+            });
+            const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
             const safePage = Math.min(page, totalPages);
-            const pageRows = rows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+            const pageRows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
             return (
               <>
               <div className="overflow-x-auto">
@@ -364,6 +372,12 @@ function Dashboard() {
                   <th className="text-left">{t("type")}</th>
                   <th className="text-right">{t("totalInvested")} (USD)</th>
                   <th className="text-right">{viewCcy}</th>
+                </tr>
+                <tr>
+                  <th className="pb-2"><input value={f.name} onChange={(e) => setFilters({ ...f, name: e.target.value })} placeholder="Filtrar..." className="w-full px-2 py-1 rounded-md bg-muted/40 border border-border text-xs font-normal normal-case tracking-normal text-foreground placeholder:text-muted-foreground" /></th>
+                  <th className="pb-2"><input value={f.type} onChange={(e) => setFilters({ ...f, type: e.target.value })} placeholder="Filtrar..." className="w-full px-2 py-1 rounded-md bg-muted/40 border border-border text-xs font-normal normal-case tracking-normal text-foreground placeholder:text-muted-foreground" /></th>
+                  <th className="pb-2"><input value={f.usd} onChange={(e) => setFilters({ ...f, usd: e.target.value })} placeholder="USD" className="w-full px-2 py-1 rounded-md bg-muted/40 border border-border text-xs font-normal normal-case tracking-normal text-foreground placeholder:text-muted-foreground text-right" /></th>
+                  <th className="pb-2"><input value={f.view} onChange={(e) => setFilters({ ...f, view: e.target.value })} placeholder={viewCcy} className="w-full px-2 py-1 rounded-md bg-muted/40 border border-border text-xs font-normal normal-case tracking-normal text-foreground placeholder:text-muted-foreground text-right" /></th>
                 </tr>
               </thead>
               <tbody>
