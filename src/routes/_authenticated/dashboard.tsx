@@ -60,6 +60,7 @@ function Dashboard() {
   });
 
   const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState({ name: "", type: "", usd: "", view: "" });
 
   const customTypeNames = useMemo(
     () => new Set((profileQ.data?.custom_asset_types ?? []).map((s) => s.toUpperCase().slice(0, 8))),
@@ -71,13 +72,17 @@ function Dashboard() {
     return customPanels.map((panelName) => {
       const ticker = panelName.toUpperCase().slice(0, 8);
       const uniq = new Set<string>();
+      let invested = 0;
       for (const h of holdingsQ.data ?? []) {
         const matches =
           (h as any).custom_type === panelName ||
           (h.ticker ?? "").toUpperCase() === ticker;
-        if (matches) uniq.add(h.name.toLowerCase());
+        if (matches) {
+          uniq.add(h.name.toLowerCase());
+          invested += Number(h.quantity) * Number(h.avg_cost_usd);
+        }
       }
-      return { name: panelName, count: uniq.size };
+      return { name: panelName, count: uniq.size, invested };
     });
   }, [customPanels, holdingsQ.data]);
 
@@ -92,14 +97,16 @@ function Dashboard() {
     const stocks = new Set<string>();
     const crypto = new Set<string>();
     const custom = new Set<string>();
+    let stocksInv = 0, cryptoInv = 0;
     for (const h of holdingsQ.data ?? []) {
       const key = h.name.toLowerCase();
       const isCustom = customTypeNames.has((h.ticker ?? "").toUpperCase());
+      const inv = Number(h.quantity) * Number(h.avg_cost_usd);
       if (isCustom) custom.add(key);
-      else if (h.asset_type === "CRYPTO") crypto.add(key);
-      else if (STOCK_TYPES.has(h.asset_type)) stocks.add(key);
+      else if (h.asset_type === "CRYPTO") { crypto.add(key); cryptoInv += inv; }
+      else if (STOCK_TYPES.has(h.asset_type)) { stocks.add(key); stocksInv += inv; }
     }
-    return { stocks: stocks.size, crypto: crypto.size, custom: custom.size };
+    return { stocks: stocks.size, crypto: crypto.size, custom: custom.size, stocksInv, cryptoInv };
   }, [holdingsQ.data, customTypeNames]);
 
   // Distribution grouped by name (no repeats), value = sum invested USD
@@ -191,8 +198,8 @@ function Dashboard() {
 
       <div className="grid md:grid-cols-3 gap-4">
         <StatCard label={`Total · ${t("numAssets")}`} value={String(counts.stocks + counts.crypto + counts.custom)} icon={<Wallet className="size-4" />} accent="primary" />
-        <StatCard label={`${t("stocks")}`} value={String(counts.stocks)} icon={<LineChartIcon className="size-4" />} muted />
-        <StatCard label={`${t("crypto")}`} value={String(counts.crypto)} icon={<Bitcoin className="size-4" />} muted />
+        <StatCard label={`${t("stocks")}`} value={String(counts.stocks)} icon={<LineChartIcon className="size-4" />} muted sub={`${fmtUSD(counts.stocksInv)} · ${fmtCurrency(counts.stocksInv * rate, viewCcy)}`} />
+        <StatCard label={`${t("crypto")}`} value={String(counts.crypto)} icon={<Bitcoin className="size-4" />} muted sub={`${fmtUSD(counts.cryptoInv)} · ${fmtCurrency(counts.cryptoInv * rate, viewCcy)}`} />
       </div>
 
       {customPanels.length > 0 && (
@@ -204,6 +211,7 @@ function Dashboard() {
               value={String(c.count)}
               icon={<Wallet className="size-4" />}
               muted
+              sub={`${fmtUSD(c.invested)} · ${fmtCurrency(c.invested * rate, viewCcy)}`}
             />
           ))}
         </div>
@@ -343,9 +351,17 @@ function Dashboard() {
               map.set(key, e);
             }
             const rows = Array.from(map.values()).sort((a, b) => b.invested - a.invested);
-            const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+            const f = filters;
+            const filtered = rows.filter((r) => {
+              if (f.name && !r.name.toLowerCase().includes(f.name.toLowerCase())) return false;
+              if (f.type && !r.type.toLowerCase().includes(f.type.toLowerCase())) return false;
+              if (f.usd && !String(Math.round(r.invested)).includes(f.usd.replace(/\D/g, ""))) return false;
+              if (f.view && !String(Math.round(r.invested * rate)).includes(f.view.replace(/\D/g, ""))) return false;
+              return true;
+            });
+            const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
             const safePage = Math.min(page, totalPages);
-            const pageRows = rows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+            const pageRows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
             return (
               <>
               <div className="overflow-x-auto">
@@ -356,6 +372,12 @@ function Dashboard() {
                   <th className="text-left">{t("type")}</th>
                   <th className="text-right">{t("totalInvested")} (USD)</th>
                   <th className="text-right">{viewCcy}</th>
+                </tr>
+                <tr>
+                  <th className="pb-2"><input value={f.name} onChange={(e) => setFilters({ ...f, name: e.target.value })} placeholder="Filtrar..." className="w-full px-2 py-1 rounded-md bg-muted/40 border border-border text-xs font-normal normal-case tracking-normal text-foreground placeholder:text-muted-foreground" /></th>
+                  <th className="pb-2"><input value={f.type} onChange={(e) => setFilters({ ...f, type: e.target.value })} placeholder="Filtrar..." className="w-full px-2 py-1 rounded-md bg-muted/40 border border-border text-xs font-normal normal-case tracking-normal text-foreground placeholder:text-muted-foreground" /></th>
+                  <th className="pb-2"><input value={f.usd} onChange={(e) => setFilters({ ...f, usd: e.target.value })} placeholder="USD" className="w-full px-2 py-1 rounded-md bg-muted/40 border border-border text-xs font-normal normal-case tracking-normal text-foreground placeholder:text-muted-foreground text-right" /></th>
+                  <th className="pb-2"><input value={f.view} onChange={(e) => setFilters({ ...f, view: e.target.value })} placeholder={viewCcy} className="w-full px-2 py-1 rounded-md bg-muted/40 border border-border text-xs font-normal normal-case tracking-normal text-foreground placeholder:text-muted-foreground text-right" /></th>
                 </tr>
               </thead>
               <tbody>
