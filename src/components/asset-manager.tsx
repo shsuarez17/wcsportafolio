@@ -369,11 +369,14 @@ function AssetDialog({
     mutationFn: async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Not authenticated");
+      const VALID_ENUMS = ["STOCK_US", "STOCK_CO", "ETF", "CRYPTO", "BOND", "OTHER"];
+      const isBuiltinEnum = VALID_ENUMS.includes(form.asset_type);
+      const fallbackEnum: AssetType = (VALID_ENUMS.includes(defaultType as string) ? defaultType : "OTHER") as AssetType;
       const payload = {
         user_id: u.user.id,
-        // Built-in enum types only persisted as enum; custom types are recorded in name/ticker
-        asset_type: (allowedTypes.some((a) => a.value === form.asset_type) ? form.asset_type : defaultType) as AssetType,
-        custom_type: allowedTypes.some((a) => a.value === form.asset_type) ? null : form.asset_type,
+        // Built-in enum types only persisted as enum; custom types are recorded in custom_type
+        asset_type: (isBuiltinEnum ? form.asset_type : fallbackEnum) as AssetType,
+        custom_type: isBuiltinEnum ? null : form.asset_type,
         ticker: (forceCustomTicker ?? (form.name.trim().slice(0, 8) || form.asset_type)).toUpperCase().slice(0, 8),
         name: form.name.trim() || form.asset_type,
         platform: form.platform.trim() || null,
