@@ -66,6 +66,21 @@ function Dashboard() {
     [profileQ.data]
   );
 
+  const customPanels = profileQ.data?.custom_asset_types ?? [];
+  const customCounts = useMemo(() => {
+    return customPanels.map((panelName) => {
+      const ticker = panelName.toUpperCase().slice(0, 8);
+      const uniq = new Set<string>();
+      for (const h of holdingsQ.data ?? []) {
+        const matches =
+          (h as any).custom_type === panelName ||
+          (h.ticker ?? "").toUpperCase() === ticker;
+        if (matches) uniq.add(h.name.toLowerCase());
+      }
+      return { name: panelName, count: uniq.size };
+    });
+  }, [customPanels, holdingsQ.data]);
+
   const invested = useMemo(() => {
     return (holdingsQ.data ?? []).reduce((a, h) => a + Number(h.quantity) * Number(h.avg_cost_usd), 0);
   }, [holdingsQ.data]);
@@ -179,6 +194,20 @@ function Dashboard() {
         <StatCard label={`${t("stocks")}`} value={String(counts.stocks)} icon={<LineChartIcon className="size-4" />} muted />
         <StatCard label={`${t("crypto")}`} value={String(counts.crypto)} icon={<Bitcoin className="size-4" />} muted />
       </div>
+
+      {customPanels.length > 0 && (
+        <div className="grid md:grid-cols-3 gap-4">
+          {customCounts.map((c) => (
+            <StatCard
+              key={c.name}
+              label={c.name}
+              value={String(c.count)}
+              icon={<Wallet className="size-4" />}
+              muted
+            />
+          ))}
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-3 gap-4">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card-surface p-6 lg:col-span-2">
