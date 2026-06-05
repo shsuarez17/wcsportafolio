@@ -102,15 +102,20 @@ export type Database = {
         Row: {
           asset_type: Database["public"]["Enums"]["asset_type"]
           avg_cost_usd: number
+          change_pct: number | null
+          change_value_usd: number | null
           created_at: string
           currency: string
           current_price_usd: number
           custom_type: string | null
+          dividend_yield: number | null
           external_id: string | null
           id: string
+          market_cap: number | null
           name: string
           notes: string | null
           platform: string | null
+          prev_close_usd: number | null
           price_updated_at: string | null
           purchase_date: string
           quantity: number
@@ -122,15 +127,20 @@ export type Database = {
         Insert: {
           asset_type: Database["public"]["Enums"]["asset_type"]
           avg_cost_usd?: number
+          change_pct?: number | null
+          change_value_usd?: number | null
           created_at?: string
           currency?: string
           current_price_usd?: number
           custom_type?: string | null
+          dividend_yield?: number | null
           external_id?: string | null
           id?: string
+          market_cap?: number | null
           name: string
           notes?: string | null
           platform?: string | null
+          prev_close_usd?: number | null
           price_updated_at?: string | null
           purchase_date?: string
           quantity?: number
@@ -142,15 +152,20 @@ export type Database = {
         Update: {
           asset_type?: Database["public"]["Enums"]["asset_type"]
           avg_cost_usd?: number
+          change_pct?: number | null
+          change_value_usd?: number | null
           created_at?: string
           currency?: string
           current_price_usd?: number
           custom_type?: string | null
+          dividend_yield?: number | null
           external_id?: string | null
           id?: string
+          market_cap?: number | null
           name?: string
           notes?: string | null
           platform?: string | null
+          prev_close_usd?: number | null
           price_updated_at?: string | null
           purchase_date?: string
           quantity?: number
@@ -350,6 +365,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      watchlist: {
+        Row: {
+          asset_kind: string
+          created_at: string
+          id: string
+          note: string | null
+          symbol: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          asset_kind?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          symbol: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          asset_kind?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          symbol?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
