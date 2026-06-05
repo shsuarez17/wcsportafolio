@@ -24,6 +24,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedCryptoRouteImport } from './routes/_authenticated/crypto'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedCustomTypeRouteImport } from './routes/_authenticated/custom/$type'
+import { Route as ApiPublicHooksRefreshPricesRouteImport } from './routes/api/public/hooks/refresh-prices'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -99,6 +100,12 @@ const AuthenticatedCustomTypeRoute = AuthenticatedCustomTypeRouteImport.update({
   path: '/custom/$type',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const ApiPublicHooksRefreshPricesRoute =
+  ApiPublicHooksRefreshPricesRouteImport.update({
+    id: '/api/public/hooks/refresh-prices',
+    path: '/api/public/hooks/refresh-prices',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/stocks': typeof AuthenticatedStocksRoute
   '/watchlist': typeof AuthenticatedWatchlistRoute
   '/custom/$type': typeof AuthenticatedCustomTypeRoute
+  '/api/public/hooks/refresh-prices': typeof ApiPublicHooksRefreshPricesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -131,6 +139,7 @@ export interface FileRoutesByTo {
   '/stocks': typeof AuthenticatedStocksRoute
   '/watchlist': typeof AuthenticatedWatchlistRoute
   '/custom/$type': typeof AuthenticatedCustomTypeRoute
+  '/api/public/hooks/refresh-prices': typeof ApiPublicHooksRefreshPricesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -149,6 +158,7 @@ export interface FileRoutesById {
   '/_authenticated/stocks': typeof AuthenticatedStocksRoute
   '/_authenticated/watchlist': typeof AuthenticatedWatchlistRoute
   '/_authenticated/custom/$type': typeof AuthenticatedCustomTypeRoute
+  '/api/public/hooks/refresh-prices': typeof ApiPublicHooksRefreshPricesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -167,6 +177,7 @@ export interface FileRouteTypes {
     | '/stocks'
     | '/watchlist'
     | '/custom/$type'
+    | '/api/public/hooks/refresh-prices'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -183,6 +194,7 @@ export interface FileRouteTypes {
     | '/stocks'
     | '/watchlist'
     | '/custom/$type'
+    | '/api/public/hooks/refresh-prices'
   id:
     | '__root__'
     | '/'
@@ -200,6 +212,7 @@ export interface FileRouteTypes {
     | '/_authenticated/stocks'
     | '/_authenticated/watchlist'
     | '/_authenticated/custom/$type'
+    | '/api/public/hooks/refresh-prices'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -208,6 +221,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiPublicHooksRefreshPricesRoute: typeof ApiPublicHooksRefreshPricesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -317,6 +331,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCustomTypeRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/api/public/hooks/refresh-prices': {
+      id: '/api/public/hooks/refresh-prices'
+      path: '/api/public/hooks/refresh-prices'
+      fullPath: '/api/public/hooks/refresh-prices'
+      preLoaderRoute: typeof ApiPublicHooksRefreshPricesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -356,6 +377,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiPublicHooksRefreshPricesRoute: ApiPublicHooksRefreshPricesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
