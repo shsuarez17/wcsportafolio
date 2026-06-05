@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedWatchlistRouteImport } from './routes/_authenticated/watchlist'
 import { Route as AuthenticatedStocksRouteImport } from './routes/_authenticated/stocks'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedRecurringRouteImport } from './routes/_authenticated/recurring'
@@ -21,7 +22,9 @@ import { Route as AuthenticatedGuideRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated/goals'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCryptoRouteImport } from './routes/_authenticated/crypto'
+import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedCustomTypeRouteImport } from './routes/_authenticated/custom/$type'
+import { Route as ApiPublicHooksRefreshPricesRouteImport } from './routes/api/public/hooks/refresh-prices'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -46,6 +49,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedWatchlistRoute = AuthenticatedWatchlistRouteImport.update({
+  id: '/watchlist',
+  path: '/watchlist',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedStocksRoute = AuthenticatedStocksRouteImport.update({
   id: '/stocks',
@@ -82,17 +90,29 @@ const AuthenticatedCryptoRoute = AuthenticatedCryptoRouteImport.update({
   path: '/crypto',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedCustomTypeRoute = AuthenticatedCustomTypeRouteImport.update({
   id: '/custom/$type',
   path: '/custom/$type',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const ApiPublicHooksRefreshPricesRoute =
+  ApiPublicHooksRefreshPricesRouteImport.update({
+    id: '/api/public/hooks/refresh-prices',
+    path: '/api/public/hooks/refresh-prices',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/analytics': typeof AuthenticatedAnalyticsRoute
   '/crypto': typeof AuthenticatedCryptoRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/goals': typeof AuthenticatedGoalsRoute
@@ -100,13 +120,16 @@ export interface FileRoutesByFullPath {
   '/recurring': typeof AuthenticatedRecurringRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/stocks': typeof AuthenticatedStocksRoute
+  '/watchlist': typeof AuthenticatedWatchlistRoute
   '/custom/$type': typeof AuthenticatedCustomTypeRoute
+  '/api/public/hooks/refresh-prices': typeof ApiPublicHooksRefreshPricesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/analytics': typeof AuthenticatedAnalyticsRoute
   '/crypto': typeof AuthenticatedCryptoRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/goals': typeof AuthenticatedGoalsRoute
@@ -114,7 +137,9 @@ export interface FileRoutesByTo {
   '/recurring': typeof AuthenticatedRecurringRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/stocks': typeof AuthenticatedStocksRoute
+  '/watchlist': typeof AuthenticatedWatchlistRoute
   '/custom/$type': typeof AuthenticatedCustomTypeRoute
+  '/api/public/hooks/refresh-prices': typeof ApiPublicHooksRefreshPricesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -123,6 +148,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/crypto': typeof AuthenticatedCryptoRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/goals': typeof AuthenticatedGoalsRoute
@@ -130,7 +156,9 @@ export interface FileRoutesById {
   '/_authenticated/recurring': typeof AuthenticatedRecurringRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/stocks': typeof AuthenticatedStocksRoute
+  '/_authenticated/watchlist': typeof AuthenticatedWatchlistRoute
   '/_authenticated/custom/$type': typeof AuthenticatedCustomTypeRoute
+  '/api/public/hooks/refresh-prices': typeof ApiPublicHooksRefreshPricesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -139,6 +167,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/reset-password'
+    | '/analytics'
     | '/crypto'
     | '/dashboard'
     | '/goals'
@@ -146,13 +175,16 @@ export interface FileRouteTypes {
     | '/recurring'
     | '/settings'
     | '/stocks'
+    | '/watchlist'
     | '/custom/$type'
+    | '/api/public/hooks/refresh-prices'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
+    | '/analytics'
     | '/crypto'
     | '/dashboard'
     | '/goals'
@@ -160,7 +192,9 @@ export interface FileRouteTypes {
     | '/recurring'
     | '/settings'
     | '/stocks'
+    | '/watchlist'
     | '/custom/$type'
+    | '/api/public/hooks/refresh-prices'
   id:
     | '__root__'
     | '/'
@@ -168,6 +202,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/reset-password'
+    | '/_authenticated/analytics'
     | '/_authenticated/crypto'
     | '/_authenticated/dashboard'
     | '/_authenticated/goals'
@@ -175,7 +210,9 @@ export interface FileRouteTypes {
     | '/_authenticated/recurring'
     | '/_authenticated/settings'
     | '/_authenticated/stocks'
+    | '/_authenticated/watchlist'
     | '/_authenticated/custom/$type'
+    | '/api/public/hooks/refresh-prices'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -184,6 +221,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiPublicHooksRefreshPricesRoute: typeof ApiPublicHooksRefreshPricesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -222,6 +260,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/watchlist': {
+      id: '/_authenticated/watchlist'
+      path: '/watchlist'
+      fullPath: '/watchlist'
+      preLoaderRoute: typeof AuthenticatedWatchlistRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/stocks': {
       id: '/_authenticated/stocks'
@@ -272,6 +317,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCryptoRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/analytics': {
+      id: '/_authenticated/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/custom/$type': {
       id: '/_authenticated/custom/$type'
       path: '/custom/$type'
@@ -279,10 +331,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCustomTypeRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/api/public/hooks/refresh-prices': {
+      id: '/api/public/hooks/refresh-prices'
+      path: '/api/public/hooks/refresh-prices'
+      fullPath: '/api/public/hooks/refresh-prices'
+      preLoaderRoute: typeof ApiPublicHooksRefreshPricesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedCryptoRoute: typeof AuthenticatedCryptoRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedGoalsRoute: typeof AuthenticatedGoalsRoute
@@ -290,10 +350,12 @@ interface AuthenticatedRouteChildren {
   AuthenticatedRecurringRoute: typeof AuthenticatedRecurringRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStocksRoute: typeof AuthenticatedStocksRoute
+  AuthenticatedWatchlistRoute: typeof AuthenticatedWatchlistRoute
   AuthenticatedCustomTypeRoute: typeof AuthenticatedCustomTypeRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedCryptoRoute: AuthenticatedCryptoRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedGoalsRoute: AuthenticatedGoalsRoute,
@@ -301,6 +363,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedRecurringRoute: AuthenticatedRecurringRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStocksRoute: AuthenticatedStocksRoute,
+  AuthenticatedWatchlistRoute: AuthenticatedWatchlistRoute,
   AuthenticatedCustomTypeRoute: AuthenticatedCustomTypeRoute,
 }
 
@@ -314,17 +377,8 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiPublicHooksRefreshPricesRoute: ApiPublicHooksRefreshPricesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

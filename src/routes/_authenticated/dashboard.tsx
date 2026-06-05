@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
@@ -159,6 +159,18 @@ function Dashboard() {
     },
     onError: (e: any) => toast.error(e?.message ?? t("error")),
   });
+
+  // Auto-refresh prices from Yahoo when dashboard mounts (once per 5 min).
+  const autoRefreshed = useRef(false);
+  useEffect(() => {
+    if (autoRefreshed.current) return;
+    autoRefreshed.current = true;
+    const last = Number(localStorage.getItem("lastAutoRefresh") || 0);
+    if (Date.now() - last < 5 * 60_000) return;
+    localStorage.setItem("lastAutoRefresh", String(Date.now()));
+    refreshMut.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="space-y-6">

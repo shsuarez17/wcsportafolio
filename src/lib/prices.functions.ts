@@ -2,41 +2,79 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-// crypto symbol -> coingecko id
-const COINGECKO_IDS: Record<string, string> = {
-  BTC: "bitcoin", ETH: "ethereum", SOL: "solana", BNB: "binancecoin",
-  ADA: "cardano", XRP: "ripple", DOGE: "dogecoin", MATIC: "matic-network",
-  AVAX: "avalanche-2", DOT: "polkadot", LINK: "chainlink", LTC: "litecoin",
-  USDT: "tether", USDC: "usd-coin", TRX: "tron", TON: "the-open-network",
+export type YahooQuote = {
+  symbol: string;
+  price: number;
+  previousClose: number;
+  change: number;
+  changePct: number;
+  marketCap: number | null;
+  currency: string;
+  dividendYield: number | null;
+  shortName: string | null;
 };
 
-async function fetchCryptoUSD(symbols: string[]): Promise<Record<string, number>> {
-  const ids = symbols.map(s => COINGECKO_IDS[s.toUpperCase()]).filter(Boolean);
-  if (!ids.length) return {};
-  const r = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(",")}&vs_currencies=usd`);
-  if (!r.ok) return {};
-  const data = await r.json() as Record<string, { usd: number }>;
-  const out: Record<string, number> = {};
-  for (const sym of symbols) {
-    const id = COINGECKO_IDS[sym.toUpperCase()];
-    if (id && data[id]) out[sym.toUpperCase()] = data[id].usd;
-  }
-  return out;
+// Map a user ticker + asset_type to a Yahoo Finance symbol.
+// Crypto goes through Yahoo (e.g. BTC -> BTC-USD) so we get a single uniform source.
+export function toYahooSymbol(ticker: string, assetType?: string): string {
+  const t = ticker.trim().toUpperCase();
+  if (!t) return t;
+  if (assetType === "CRYPTO" && !t.includes("-")) return `${t}-USD`;
+  return t;
 }
 
-async function fetchStockUSD(symbols: string[]): Promise<Record<string, number>> {
-  const out: Record<string, number> = {};
-  await Promise.all(symbols.map(async (s) => {
+async function fetchYahooQuotes(symbols: string[]): Promise<Record<string, YahooQuote>> {
+  const out: Record<string, YahooQuote> = {};
+  const unique = Array.from(new Set(symbols.filter(Boolean)));
+  if (!unique.length) return out;
+  // chart endpoint per-symbol (more reliable than the /v7/quote endpoint which is often blocked)
+  await Promise.all(unique.map(async (s) => {
     try {
-      const r = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s)}?interval=1d&range=1d`, {
-        headers: { "User-Agent": "Mozilla/5.0" },
-      });
+      const r = await fetch(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s)}?interval=1d&range=5d`,
+        { headers: { "User-Agent": "Mozilla/5.0" } },
+      );
       if (!r.ok) return;
       const j = await r.json() as any;
-      const price = j?.chart?.result?.[0]?.meta?.regularMarketPrice;
-      if (typeof price === "number") out[s.toUpperCase()] = price;
+      const meta = j?.chart?.result?.[0]?.meta;
+      if (!meta || typeof meta.regularMarketPrice !== "number") return;
+      const price = Number(meta.regularMarketPrice);
+      const prev = Number(
+        meta.chartPreviousClose ?? meta.previousClose ?? price
+      );
+      out[s.toUpperCase()] = {
+        symbol: s.toUpperCase(),
+        price,
+        previousClose: prev,
+        change: price - prev,
+        changePct: prev ? (price - prev) / prev : 0,
+        marketCap: null,
+        currency: meta.currency ?? "USD",
+        dividendYield: null,
+        shortName: meta.shortName ?? meta.longName ?? null,
+      };
     } catch { /* ignore */ }
   }));
+
+  // enrich with marketCap + dividendYield via quoteSummary
+  await Promise.all(Object.keys(out).map(async (sym) => {
+    try {
+      const r = await fetch(
+        `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(sym)}?modules=summaryDetail,price`,
+        { headers: { "User-Agent": "Mozilla/5.0" } },
+      );
+      if (!r.ok) return;
+      const j = await r.json() as any;
+      const res = j?.quoteSummary?.result?.[0];
+      const mcap = res?.price?.marketCap?.raw ?? res?.summaryDetail?.marketCap?.raw ?? null;
+      const dy = res?.summaryDetail?.dividendYield?.raw
+        ?? res?.summaryDetail?.trailingAnnualDividendYield?.raw
+        ?? null;
+      if (typeof mcap === "number") out[sym].marketCap = mcap;
+      if (typeof dy === "number") out[sym].dividendYield = dy;
+    } catch { /* ignore */ }
+  }));
+
   return out;
 }
 
@@ -63,35 +101,30 @@ export const refreshPrices = createServerFn({ method: "POST" })
       .eq("user_id", userId);
     if (error) throw error;
 
-    const cryptoSyms = (holdings ?? []).filter(h => h.asset_type === "CRYPTO").map(h => h.ticker);
-    const stockSyms = (holdings ?? []).filter(h => h.asset_type !== "CRYPTO").map(h => h.ticker);
-
-    const [cryptoPrices, stockPrices, fx] = await Promise.all([
-      cryptoSyms.length ? fetchCryptoUSD(cryptoSyms) : Promise.resolve({} as Record<string, number>),
-      stockSyms.length ? fetchStockUSD(stockSyms) : Promise.resolve({} as Record<string, number>),
-      fetchUsdCop(),
-    ]);
-
-    const all = { ...cryptoPrices, ...stockPrices };
+    const symbolByHolding = (holdings ?? []).map((h) => ({
+      id: h.id,
+      sym: toYahooSymbol(h.ticker, h.asset_type as string),
+    }));
+    const quotes = await fetchYahooQuotes(symbolByHolding.map((s) => s.sym));
+    const fx = await fetchUsdCop();
     const now = new Date().toISOString();
-    const updates: Promise<unknown>[] = [];
-    for (const h of holdings ?? []) {
-      const p = all[h.ticker.toUpperCase()];
-      if (typeof p === "number") {
-        updates.push(
-          Promise.resolve(
-            supabase.from("investments").update({
-              current_price_usd: p, price_updated_at: now,
-            }).eq("id", h.id)
-          )
-        );
-      }
-    }
-    await Promise.all(updates);
-
-    // cache fx (admin via authed client: RLS allows read; need service or skip)
-    // We just return fx; saving uses admin path via separate fn if needed.
-    return { updated: Object.keys(all).length, fx_usd_cop: fx };
+    let updated = 0;
+    await Promise.all(symbolByHolding.map(async (h) => {
+      const q = quotes[h.sym.toUpperCase()];
+      if (!q) return;
+      updated++;
+      await supabase.from("investments").update({
+        current_price_usd: q.price,
+        prev_close_usd: q.previousClose,
+        change_value_usd: q.change,
+        change_pct: q.changePct,
+        market_cap: q.marketCap,
+        currency: q.currency || "USD",
+        dividend_yield: q.dividendYield,
+        price_updated_at: now,
+      }).eq("id", h.id);
+    }));
+    return { updated, fx_usd_cop: fx };
   });
 
 export const getFxUsdCop = createServerFn({ method: "GET" })
@@ -103,16 +136,19 @@ export const searchTicker = createServerFn({ method: "POST" })
   .inputValidator((d: { query: string; type: "CRYPTO" | "STOCK" }) =>
     z.object({ query: z.string().min(1).max(20), type: z.enum(["CRYPTO", "STOCK"]) }).parse(d))
   .handler(async ({ data }) => {
-    if (data.type === "CRYPTO") {
-      const r = await fetch(`https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(data.query)}`);
-      if (!r.ok) return { results: [] };
-      const j = await r.json() as any;
-      return { results: (j?.coins ?? []).slice(0, 8).map((c: any) => ({ symbol: c.symbol?.toUpperCase(), name: c.name })) };
-    }
     const r = await fetch(`https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(data.query)}`, {
       headers: { "User-Agent": "Mozilla/5.0" },
     });
     if (!r.ok) return { results: [] };
     const j = await r.json() as any;
     return { results: (j?.quotes ?? []).slice(0, 8).map((q: any) => ({ symbol: q.symbol, name: q.shortname ?? q.longname ?? q.symbol })) };
+  });
+
+// Fetch live quotes for an arbitrary list of Yahoo symbols (used by watchlist UI).
+export const quoteSymbols = createServerFn({ method: "POST" })
+  .inputValidator((d: { symbols: string[] }) =>
+    z.object({ symbols: z.array(z.string().min(1).max(15)).max(50) }).parse(d))
+  .handler(async ({ data }) => {
+    const quotes = await fetchYahooQuotes(data.symbols.map((s) => s.toUpperCase()));
+    return { quotes };
   });
