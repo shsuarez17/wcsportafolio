@@ -108,8 +108,11 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const isAdmin =
     typeof window !== "undefined" &&
-    (new URLSearchParams(window.location.search).get("admin") === "true" ||
-      localStorage.getItem("wcs_admin") === "true");
+    new URLSearchParams(window.location.search).get("admin") === "true";
+
+  const hasAdminAccess =
+    isAdmin ||
+    (typeof window !== "undefined" && localStorage.getItem("wcs_admin") === "true");
 
   if (isAdmin && typeof window !== "undefined") {
     // Persist so reloads without ?admin=true still bypass
@@ -121,7 +124,7 @@ function RootComponent() {
       <I18nProvider>
         <AuthProvider>
           <AuthSync />
-          {isAdmin ? (
+          {hasAdminAccess ? (
             <Outlet />
           ) : (
             <LicenseGate>

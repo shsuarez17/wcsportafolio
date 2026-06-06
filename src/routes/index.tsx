@@ -8,6 +8,13 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/")({
   beforeLoad: async () => {
     if (typeof window === "undefined") return;
+
+    const isAdmin = new URLSearchParams(window.location.search).get("admin") === "true";
+    if (isAdmin) {
+      localStorage.setItem("wcs_admin", "true");
+      throw redirect({ to: "/dashboard" });
+    }
+
     const { data } = await supabase.auth.getSession();
     if (data.session) throw redirect({ to: "/dashboard" });
   },
