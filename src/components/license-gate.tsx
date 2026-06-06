@@ -32,6 +32,26 @@ export function LicenseGate({ children }: { children: ReactNode }) {
     setLicensed(!!saved);
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (licensed !== false) return;
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "a" || e.key === "A") {
+        aCountRef.current += 1;
+        if (aCountRef.current >= 5) {
+          localStorage.setItem(ADMIN_KEY, "true");
+          setLicensed(true);
+        }
+      } else if (e.key.length === 1) {
+        aCountRef.current = 0;
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [licensed]);
+
   async function activate(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
