@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useProfile } from "@/lib/use-profile";
 import { useEffect, useState } from "react";
+import { AI_MODELS, useActiveModel } from "@/hooks/use-active-model";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
@@ -32,6 +33,12 @@ function AuthedLayout() {
   const profileQ = useProfile();
   const customTypes = profileQ.data?.custom_asset_types ?? [];
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [activeModel, setActiveModel] = useActiveModel();
+
+  const onPickModel = (id: typeof AI_MODELS[number]["id"], label: string) => {
+    setActiveModel(id);
+    toast.success(`Modelo cambiado a ${label}`);
+  };
 
   useEffect(() => {
     const onScroll = () => setShowScrollTop(window.scrollY > 300);
@@ -94,6 +101,31 @@ function AuthedLayout() {
           )}
         </nav>
         <div className="p-3 border-t border-border space-y-2">
+          <div>
+            <p className="px-3 pb-1.5 text-[10px] uppercase tracking-widest font-mono text-muted-foreground">IA activa</p>
+            <div className="flex gap-1 px-2">
+              {AI_MODELS.map((m) => {
+                const active = activeModel === m.id;
+                return (
+                  <button
+                    key={m.id}
+                    onClick={() => onPickModel(m.id, m.label)}
+                    className="flex-1 flex items-center justify-center gap-1 px-1.5 py-1 rounded-full text-[10px] font-mono transition-all"
+                    style={{
+                      background: active ? `${m.color}1f` : "transparent",
+                      border: `1px solid ${active ? m.color : "hsl(var(--border))"}`,
+                      color: active ? m.color : "hsl(var(--muted-foreground))",
+                      boxShadow: active ? `0 0 0 1px ${m.color}55, 0 0 8px ${m.color}33` : undefined,
+                    }}
+                    title={m.label}
+                  >
+                    <span>{m.icon}</span>
+                    <span className="truncate">{m.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <button onClick={() => setLang(lang === "es" ? "en" : "es")} className="text-xs font-mono text-muted-foreground hover:text-foreground w-full text-left px-3">
             {t("language")}: {lang.toUpperCase()}
           </button>
@@ -106,6 +138,26 @@ function AuthedLayout() {
       <div className="flex-1 min-w-0 relative">
         {/* mobile nav */}
         <div className="md:hidden flex items-center gap-2 overflow-x-auto p-3 border-b border-border bg-card/40">
+          {AI_MODELS.map((m) => {
+            const active = activeModel === m.id;
+            return (
+              <button
+                key={m.id}
+                onClick={() => onPickModel(m.id, m.label)}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-mono whitespace-nowrap"
+                style={{
+                  background: active ? `${m.color}1f` : "transparent",
+                  border: `1px solid ${active ? m.color : "hsl(var(--border))"}`,
+                  color: active ? m.color : "hsl(var(--muted-foreground))",
+                  boxShadow: active ? `0 0 8px ${m.color}33` : undefined,
+                }}
+              >
+                <span>{m.icon}</span>
+                {m.label}
+              </button>
+            );
+          })}
+          <span className="h-5 w-px bg-border shrink-0" />
           {items.map((it) => {
             const active = path === it.to;
             return (
