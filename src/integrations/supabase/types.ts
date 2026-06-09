@@ -295,6 +295,51 @@ export type Database = {
           },
         ]
       }
+      saved_analyses: {
+        Row: {
+          ai_model: string
+          analysis_type: string
+          change_pct: number | null
+          created_at: string
+          id: string
+          interval: string
+          price: number | null
+          prompt: string | null
+          result: string
+          symbol: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_model?: string
+          analysis_type?: string
+          change_pct?: number | null
+          created_at?: string
+          id?: string
+          interval: string
+          price?: number | null
+          prompt?: string | null
+          result: string
+          symbol: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_model?: string
+          analysis_type?: string
+          change_pct?: number | null
+          created_at?: string
+          id?: string
+          interval?: string
+          price?: number | null
+          prompt?: string | null
+          result?: string
+          symbol?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       snaptrade_users: {
         Row: {
           created_at: string
