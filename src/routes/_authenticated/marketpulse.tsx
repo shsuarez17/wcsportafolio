@@ -377,10 +377,12 @@ function MarketPulsePage() {
             <div className="px-3 py-2 border-b" style={{ borderColor: C.border }}>
               <span className="text-[10px] uppercase tracking-widest font-mono" style={{ color: C.muted }}>Análisis</span>
             </div>
-            <div className="p-3 space-y-4 text-xs">
-              <ToolGroup label="Indicadores" items={["RSI", "MACD", "Bollinger", "EMA 20", "EMA 50", "Volumen"]} />
-              <ToolGroup label="Dibujo" items={["Tendencia", "Fibonacci", "Horizontal", "Rectángulo", "Texto"]} />
-              <ToolGroup label="Comparar" items={["SPX", "DXY", "VIX", "GOLD"]} />
+            <div className="flex-1 overflow-auto">
+              <AnalysisPanel symbol={symbol} interval={interval} />
+              <div className="p-3 space-y-4 text-xs border-t" style={{ borderColor: C.border }}>
+                <ToolGroup label="Indicadores" items={["RSI", "MACD", "Bollinger", "EMA 20", "EMA 50", "Volumen"]} />
+                <ToolGroup label="Dibujo" items={["Tendencia", "Fibonacci", "Horizontal", "Rectángulo", "Texto"]} />
+              </div>
             </div>
             <div className="mt-auto p-3 border-t" style={{ borderColor: C.border }}>
               <p className="font-mono text-[10px]" style={{ color: C.muted }}>
