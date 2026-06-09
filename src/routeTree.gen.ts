@@ -18,6 +18,7 @@ import { Route as AuthenticatedWatchlistRouteImport } from './routes/_authentica
 import { Route as AuthenticatedStocksRouteImport } from './routes/_authenticated/stocks'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedRecurringRouteImport } from './routes/_authenticated/recurring'
+import { Route as AuthenticatedMarketpulseRouteImport } from './routes/_authenticated/marketpulse'
 import { Route as AuthenticatedGuideRouteImport } from './routes/_authenticated/guide'
 import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated/goals'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -70,6 +71,12 @@ const AuthenticatedRecurringRoute = AuthenticatedRecurringRouteImport.update({
   path: '/recurring',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedMarketpulseRoute =
+  AuthenticatedMarketpulseRouteImport.update({
+    id: '/marketpulse',
+    path: '/marketpulse',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedGuideRoute = AuthenticatedGuideRouteImport.update({
   id: '/guide',
   path: '/guide',
@@ -117,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/goals': typeof AuthenticatedGoalsRoute
   '/guide': typeof AuthenticatedGuideRoute
+  '/marketpulse': typeof AuthenticatedMarketpulseRoute
   '/recurring': typeof AuthenticatedRecurringRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/stocks': typeof AuthenticatedStocksRoute
@@ -134,6 +142,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/goals': typeof AuthenticatedGoalsRoute
   '/guide': typeof AuthenticatedGuideRoute
+  '/marketpulse': typeof AuthenticatedMarketpulseRoute
   '/recurring': typeof AuthenticatedRecurringRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/stocks': typeof AuthenticatedStocksRoute
@@ -153,6 +162,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/goals': typeof AuthenticatedGoalsRoute
   '/_authenticated/guide': typeof AuthenticatedGuideRoute
+  '/_authenticated/marketpulse': typeof AuthenticatedMarketpulseRoute
   '/_authenticated/recurring': typeof AuthenticatedRecurringRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/stocks': typeof AuthenticatedStocksRoute
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/goals'
     | '/guide'
+    | '/marketpulse'
     | '/recurring'
     | '/settings'
     | '/stocks'
@@ -189,6 +200,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/goals'
     | '/guide'
+    | '/marketpulse'
     | '/recurring'
     | '/settings'
     | '/stocks'
@@ -207,6 +219,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/goals'
     | '/_authenticated/guide'
+    | '/_authenticated/marketpulse'
     | '/_authenticated/recurring'
     | '/_authenticated/settings'
     | '/_authenticated/stocks'
@@ -289,6 +302,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRecurringRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/marketpulse': {
+      id: '/_authenticated/marketpulse'
+      path: '/marketpulse'
+      fullPath: '/marketpulse'
+      preLoaderRoute: typeof AuthenticatedMarketpulseRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/guide': {
       id: '/_authenticated/guide'
       path: '/guide'
@@ -347,6 +367,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedGoalsRoute: typeof AuthenticatedGoalsRoute
   AuthenticatedGuideRoute: typeof AuthenticatedGuideRoute
+  AuthenticatedMarketpulseRoute: typeof AuthenticatedMarketpulseRoute
   AuthenticatedRecurringRoute: typeof AuthenticatedRecurringRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStocksRoute: typeof AuthenticatedStocksRoute
@@ -360,6 +381,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedGoalsRoute: AuthenticatedGoalsRoute,
   AuthenticatedGuideRoute: AuthenticatedGuideRoute,
+  AuthenticatedMarketpulseRoute: AuthenticatedMarketpulseRoute,
   AuthenticatedRecurringRoute: AuthenticatedRecurringRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStocksRoute: AuthenticatedStocksRoute,
