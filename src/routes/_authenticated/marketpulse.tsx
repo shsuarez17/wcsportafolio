@@ -1,6 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Search, Plus, Trash2, LayoutGrid, Square, Star, TrendingUp, TrendingDown, Newspaper } from "lucide-react";
+import { Search, Plus, Trash2, LayoutGrid, Square, Star, TrendingUp, TrendingDown, Newspaper, Sparkles, Loader2 } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { AI_MODELS, modelMeta, useActiveModel } from "@/hooks/use-active-model";
+import { analyzeMarket, deleteAnalysis, listAnalyses } from "@/lib/analyze-market.functions";
 
 export const Route = createFileRoute("/_authenticated/marketpulse")({
   component: MarketPulsePage,
@@ -403,6 +408,104 @@ function ToolGroup({ label, items }: { label: string; items: string[] }) {
             {it}
           </span>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function AnalysisPanel({ symbol, interval }: { symbol: string; interval: string }) {
+  const [activeModel] = useActiveModel();
+  const meta = modelMeta(activeModel);
+  const qc = useQueryClient();
+  const analyzeFn = useServerFn(analyzeMarket);
+  const listFn = useServerFn(listAnalyses);
+  const deleteFn = useServerFn(deleteAnalysis);
+
+  const listQ = useQuery({
+    queryKey: ["saved_analyses"],
+    queryFn: () => listFn(),
+  });
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      analyzeFn({
+        data: { symbol, interval, model: activeModel, analysisType: "technical", save: true },
+      }),
+    onSuccess: () => {
+      toast.success(`Análisis generado con ${meta.label}`);
+      qc.invalidateQueries({ queryKey: ["saved_analyses"] });
+    },
+    onError: (e: Error) => toast.error(e.message ?? "Error al analizar"),
+  });
+
+  const del = useMutation({
+    mutationFn: (id: string) => deleteFn({ data: { id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["saved_analyses"] }),
+  });
+
+  const latest = mutation.data?.result;
+
+  return (
+    <div className="p-3 space-y-3 text-xs">
+      <div>
+        <div className="font-mono text-[10px] mb-1.5" style={{ color: C.muted }}>ANÁLISIS IA</div>
+        <button
+          onClick={() => mutation.mutate()}
+          disabled={mutation.isPending}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded font-semibold text-xs transition-all disabled:opacity-60"
+          style={{
+            background: `linear-gradient(135deg, ${meta.color}, ${meta.color}cc)`,
+            color: "#001",
+            boxShadow: `0 0 12px ${meta.color}55`,
+          }}
+        >
+          {mutation.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
+          {mutation.isPending ? "Analizando…" : `Analizar con ${meta.label}`}
+        </button>
+        <div className="font-mono text-[10px] mt-1.5 text-center" style={{ color: C.muted }}>
+          {meta.icon} sobre {symbol} · {interval}
+        </div>
+      </div>
+
+      {latest && (
+        <div className="rounded p-2 text-[11px] whitespace-pre-wrap leading-relaxed max-h-64 overflow-auto"
+          style={{ background: C.bg, border: `1px solid ${meta.color}55`, color: C.text }}>
+          <div className="flex items-center gap-1.5 mb-1.5 pb-1.5 border-b" style={{ borderColor: C.border }}>
+            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded" style={{ background: `${meta.color}22`, color: meta.color }}>
+              {meta.icon} {meta.label}
+            </span>
+          </div>
+          {latest}
+        </div>
+      )}
+
+      <div>
+        <div className="font-mono text-[10px] mb-1.5" style={{ color: C.muted }}>HISTORIAL</div>
+        {listQ.isLoading ? (
+          <div className="font-mono text-[10px]" style={{ color: C.muted }}>Cargando…</div>
+        ) : listQ.error ? (
+          <div className="font-mono text-[10px]" style={{ color: C.down }}>Inicia sesión para ver el historial</div>
+        ) : (listQ.data?.items ?? []).length === 0 ? (
+          <div className="font-mono text-[10px]" style={{ color: C.muted }}>Aún no hay análisis guardados.</div>
+        ) : (
+          <ul className="space-y-1.5 max-h-56 overflow-auto">
+            {(listQ.data?.items ?? []).map((a: any) => {
+              const m = modelMeta(a.ai_model as any);
+              return (
+                <li key={a.id} className="rounded p-2 text-[10px] font-mono group" style={{ background: C.bg, border: `1px solid ${C.border}` }}>
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="truncate" style={{ color: C.text }}>{a.symbol} · {a.interval}</span>
+                    <span className="shrink-0 px-1 rounded" style={{ color: m.color, background: `${m.color}1f` }}>{m.icon} {m.label}</span>
+                    <button onClick={() => del.mutate(a.id)} className="opacity-0 group-hover:opacity-100" style={{ color: C.muted }}>
+                      <Trash2 className="size-3" />
+                    </button>
+                  </div>
+                  <div className="mt-1 text-[10px] line-clamp-2" style={{ color: C.muted }}>{a.result}</div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
     </div>
   );
