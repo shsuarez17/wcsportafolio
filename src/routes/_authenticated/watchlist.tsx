@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { listWatchlist, addWatchlistItem, deleteWatchlistItem } from "@/lib/watchlist.functions";
 import { quoteSymbols, toYahooSymbol } from "@/lib/prices.functions";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,18 @@ function WatchlistPage() {
   const del = useServerFn(deleteWatchlistItem);
   const quote = useServerFn(quoteSymbols);
 
-  const wlQ = useQuery({ queryKey: ["watchlist"], queryFn: () => list() });
+  const [hasSession, setHasSession] = useState<boolean | null>(null);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setHasSession(!!data.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setHasSession(!!s));
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  const wlQ = useQuery({
+    queryKey: ["watchlist"],
+    queryFn: () => list(),
+    enabled: hasSession === true,
+  });
   const items = wlQ.data?.items ?? [];
 
   const symbols = useMemo(
@@ -57,6 +69,11 @@ function WatchlistPage() {
 
   return (
     <div className="space-y-6">
+      {hasSession === false && (
+        <Card className="p-4 border-amber-500/40 bg-amber-500/5 text-sm">
+          Modo administrador sin sesión: la watchlist requiere iniciar sesión para guardar símbolos. Inicia sesión para usar esta función.
+        </Card>
+      )}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl md:text-3xl font-display font-bold">Watchlist</h1>
