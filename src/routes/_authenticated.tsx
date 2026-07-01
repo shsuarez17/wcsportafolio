@@ -74,7 +74,7 @@ function AuthedLayout() {
       ],
     },
     {
-      label: null,
+      label: "Información",
       items: [
         { to: "/settings", label: t("settings"), icon: Settings },
         { to: "/guide", label: t("guide"), icon: BookOpen },
