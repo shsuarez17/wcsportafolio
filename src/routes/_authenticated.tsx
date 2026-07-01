@@ -48,7 +48,8 @@ function AuthedLayout() {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
-  const groups = [
+  type NavItem = { to: string; label: string; icon: typeof LayoutDashboard };
+  const groups: { label: string | null; items: NavItem[] }[] = [
     {
       label: null,
       items: [
@@ -79,8 +80,8 @@ function AuthedLayout() {
         { to: "/guide", label: t("guide"), icon: BookOpen },
       ],
     },
-  ] as const;
-  const items = groups.flatMap((g) => g.items);
+  ];
+  const items: NavItem[] = groups.flatMap((g) => g.items);
 
   const logout = async () => {
     await supabase.auth.signOut();
