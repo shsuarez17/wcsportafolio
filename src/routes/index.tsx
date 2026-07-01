@@ -32,9 +32,16 @@ function Landing() {
           <span className="font-display font-bold text-lg">{t("appName")}</span>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={() => setLang(lang === "es" ? "en" : "es")} className="text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground">
-            {lang === "es" ? "EN" : "ES"}
-          </button>
+          <select
+            value={lang}
+            onChange={(e) => setLang(e.target.value as any)}
+            className="text-xs font-mono uppercase tracking-widest bg-transparent border border-border rounded px-1.5 py-0.5 text-muted-foreground hover:text-foreground"
+          >
+            <option value="es">ES</option>
+            <option value="en">EN</option>
+            <option value="fr">FR</option>
+            <option value="it">IT</option>
+          </select>
           <Link to="/login"><Button variant="ghost" size="sm">{t("login")}</Button></Link>
           <Link to="/login"><Button size="sm">{t("getStarted")}</Button></Link>
         </div>
