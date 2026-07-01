@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AssetManager } from "@/components/asset-manager";
 import { useI18n } from "@/lib/i18n";
-import { SnapTradeConnect } from "@/components/snaptrade-connect";
 import { CsvImport } from "@/components/csv-import";
 
 export const Route = createFileRoute("/_authenticated/stocks")({ component: StocksPage });
@@ -10,7 +9,6 @@ function StocksPage() {
   const { t } = useI18n();
   return (
     <div className="space-y-6">
-      <SnapTradeConnect />
       <div className="flex justify-end">
         <CsvImport
           allowedTypes={[
