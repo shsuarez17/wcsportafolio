@@ -64,9 +64,16 @@ function LoginPage() {
             <div className="size-8 rounded-lg" style={{ backgroundImage: "var(--gradient-primary)" }} />
             <span className="font-display font-bold">{t("appName")}</span>
           </div>
-          <button onClick={() => setLang(lang === "es" ? "en" : "es")} className="text-xs font-mono text-muted-foreground">
-            {lang === "es" ? "EN" : "ES"}
-          </button>
+          <select
+            value={lang}
+            onChange={(e) => setLang(e.target.value as any)}
+            className="text-xs font-mono bg-transparent border border-border rounded px-1.5 py-0.5 text-muted-foreground"
+          >
+            <option value="es">ES</option>
+            <option value="en">EN</option>
+            <option value="fr">FR</option>
+            <option value="it">IT</option>
+          </select>
         </div>
 
         <Tabs defaultValue="login">

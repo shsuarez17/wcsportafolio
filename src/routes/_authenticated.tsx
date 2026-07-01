@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, LANGS, type Lang } from "@/lib/i18n";
 import { LayoutDashboard, LineChart, Bitcoin, Target, RefreshCw, LogOut, Repeat, Settings, BookOpen, Layers, ArrowUp, BarChart3, Eye, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -157,9 +157,23 @@ function AuthedLayout() {
               })}
             </div>
           </div>
-          <button onClick={() => setLang(lang === "es" ? "en" : "es")} className="text-xs font-mono text-muted-foreground hover:text-foreground w-full text-left px-3">
-            {t("language")}: {lang.toUpperCase()}
-          </button>
+          <div className="px-2">
+            <p className="px-1 pb-1.5 text-[10px] uppercase tracking-widest font-mono text-muted-foreground">{t("language")}</p>
+            <div className="flex gap-1">
+              {LANGS.map((l) => {
+                const active = lang === l.code;
+                return (
+                  <button
+                    key={l.code}
+                    onClick={() => setLang(l.code as Lang)}
+                    className={`flex-1 px-1.5 py-1 rounded-md text-[10px] font-mono border transition-colors ${active ? "bg-primary/15 text-primary border-primary/40" : "border-border text-muted-foreground hover:text-foreground"}`}
+                  >
+                    {l.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <Button variant="ghost" size="sm" className="w-full justify-start" onClick={logout}>
             <LogOut className="size-4 mr-2" /> {t("logout")}
           </Button>
