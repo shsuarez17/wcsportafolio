@@ -167,8 +167,12 @@ function Dashboard() {
     autoRefreshed.current = true;
     const last = Number(localStorage.getItem("lastAutoRefresh") || 0);
     if (Date.now() - last < 5 * 60_000) return;
-    localStorage.setItem("lastAutoRefresh", String(Date.now()));
-    refreshMut.mutate();
+    // Only refresh when there's an authenticated session (skip in admin-bypass mode).
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) return;
+      localStorage.setItem("lastAutoRefresh", String(Date.now()));
+      refreshMut.mutate();
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
