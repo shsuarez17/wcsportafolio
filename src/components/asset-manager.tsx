@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, CalendarIcon, ArrowRight, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, CalendarIcon, ArrowRight, Search, X, Check } from "lucide-react";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RTooltip } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
@@ -316,22 +316,73 @@ export function AssetManager({
         knownNames={Array.from(new Set((q.data ?? []).map((h) => h.name))).filter(Boolean)}
         customTypes={profileQ.data?.custom_asset_types ?? []}
         forceCustomTicker={customTypeName}
+        panelKey={customTypeName ?? `builtin:${defaultType}`}
+        panelExtras={
+          (profileQ.data?.custom_panel_subtypes ?? {})[
+            customTypeName ?? `builtin:${defaultType}`
+          ] ?? []
+        }
       />
     </div>
   );
 }
 
 function AssetDialog({
-  open, onClose, editing, allowedTypes, defaultType, baseCurrency, rates, knownNames, customTypes, forceCustomTicker,
+  open, onClose, editing, allowedTypes, defaultType, baseCurrency, rates, knownNames, customTypes, forceCustomTicker, panelKey, panelExtras,
 }: {
   open: boolean; onClose: () => void; editing: Investment | null;
   allowedTypes: { value: AssetType; label: string }[]; defaultType: AssetType;
   baseCurrency: Currency; rates: Record<Currency, number>;
   knownNames: string[]; customTypes: string[];
   forceCustomTicker?: string;
+  panelKey: string;
+  panelExtras: string[];
 }) {
   const { t } = useI18n();
   const qc = useQueryClient();
+  const [newTypeInput, setNewTypeInput] = useState("");
+  const [showNewType, setShowNewType] = useState(false);
+
+  const persistPanelExtras = async (next: string[]) => {
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return;
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("custom_panel_subtypes")
+      .eq("id", u.user.id)
+      .maybeSingle();
+    const current = ((prof as any)?.custom_panel_subtypes ?? {}) as Record<string, string[]>;
+    const merged = { ...current, [panelKey]: next };
+    const { error } = await supabase
+      .from("profiles")
+      .update({ custom_panel_subtypes: merged as any })
+      .eq("id", u.user.id);
+    if (error) { toast.error(error.message); return false; }
+    await qc.invalidateQueries({ queryKey: ["profile"] });
+    return true;
+  };
+
+  const addNewType = async () => {
+    const v = newTypeInput.trim();
+    if (!v) return;
+    const exists =
+      allowedTypes.some((a) => a.label.toLowerCase() === v.toLowerCase() || a.value === v) ||
+      panelExtras.some((x) => x.toLowerCase() === v.toLowerCase());
+    if (!exists) {
+      const ok = await persistPanelExtras([...panelExtras, v]);
+      if (!ok) return;
+    }
+    setForm((f) => ({ ...f, asset_type: v }));
+    setNewTypeInput("");
+    setShowNewType(false);
+  };
+
+  const removeExtra = async (v: string) => {
+    if (!confirm(t("confirmDelete"))) return;
+    const next = panelExtras.filter((x) => x !== v);
+    await persistPanelExtras(next);
+    if (form.asset_type === v) setForm((f) => ({ ...f, asset_type: defaultType }));
+  };
 
   const [form, setForm] = useState({
     asset_type: defaultType as string,
@@ -404,6 +455,7 @@ function AssetDialog({
 
   const typeOptions = [
     ...allowedTypes.map((o) => ({ value: o.value as string, label: o.label })),
+    ...panelExtras.map((c) => ({ value: c, label: c })),
     ...(forceCustomTicker ? [] : customTypes.map((c) => ({ value: c, label: c }))),
   ];
 
@@ -420,6 +472,63 @@ function AssetDialog({
                 {typeOptions.map((opt) => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
               </SelectContent>
             </Select>
+            {panelExtras.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {panelExtras.map((v) => (
+                  <span
+                    key={v}
+                    className="inline-flex items-center gap-1 rounded-full bg-muted border border-border px-2 py-0.5 text-xs"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, asset_type: v })}
+                      className={form.asset_type === v ? "font-semibold text-primary" : ""}
+                    >
+                      {v}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeExtra(v)}
+                      className="text-muted-foreground hover:text-destructive"
+                      aria-label={t("delete")}
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            {showNewType ? (
+              <div className="flex gap-2 mt-2">
+                <Input
+                  autoFocus
+                  value={newTypeInput}
+                  onChange={(e) => setNewTypeInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") { e.preventDefault(); addNewType(); }
+                    if (e.key === "Escape") { setShowNewType(false); setNewTypeInput(""); }
+                  }}
+                  placeholder={t("newSubtypePlaceholder")}
+                  className="h-8 text-sm"
+                />
+                <Button type="button" size="sm" variant="secondary" onClick={addNewType}>
+                  <Check className="size-3.5 mr-1" />{t("save")}
+                </Button>
+                <Button type="button" size="sm" variant="ghost" onClick={() => { setShowNewType(false); setNewTypeInput(""); }}>
+                  <X className="size-3.5" />
+                </Button>
+              </div>
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowNewType(true)}
+                className="mt-2 h-7 px-2 text-xs"
+              >
+                <Plus className="size-3.5 mr-1" />{t("addSubtype")}
+              </Button>
+            )}
           </div>
 
           <div className="col-span-2">
