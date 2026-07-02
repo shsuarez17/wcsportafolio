@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, redirect, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n, LANGS, type Lang } from "@/lib/i18n";
-import { LayoutDashboard, LineChart, Bitcoin, Target, RefreshCw, LogOut, Repeat, Settings, BookOpen, Layers, ArrowUp, BarChart3, Eye, Activity } from "lucide-react";
+import { LayoutDashboard, LineChart, Bitcoin, Target, RefreshCw, LogOut, Repeat, Settings, BookOpen, Layers, ArrowUp, BarChart3, Eye, Activity, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useProfile } from "@/lib/use-profile";
@@ -34,6 +34,40 @@ function AuthedLayout() {
   const customTypes = profileQ.data?.custom_asset_types ?? [];
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeModel, setActiveModel] = useActiveModel();
+  const [savedRoute, setSavedRoute] = useState<string | null>(null);
+  const [restored, setRestored] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // On first profile load, restore last route if user landed on default entry point.
+  useEffect(() => {
+    if (restored || !profileQ.data) return;
+    const last = profileQ.data.last_route;
+    setSavedRoute(last);
+    setRestored(true);
+    if (
+      last &&
+      last !== path &&
+      (path === "/dashboard" || path === "/" || path === "/_authenticated")
+    ) {
+      nav({ to: last, replace: true } as any);
+    }
+  }, [profileQ.data, restored, path, nav]);
+
+  const saveCurrentRoute = async () => {
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ last_route: path })
+      .eq("id", u.user.id);
+    setSaving(false);
+    if (error) toast.error(error.message);
+    else {
+      setSavedRoute(path);
+      toast.success(lang === "es" ? "Página guardada" : "Page saved");
+    }
+  };
 
   const onPickModel = (id: typeof AI_MODELS[number]["id"], label: string) => {
     setActiveModel(id);
@@ -227,6 +261,22 @@ function AuthedLayout() {
             <ArrowUp className="size-4" />
           </Button>
         )}
+
+        <Button
+          size="icon"
+          onClick={saveCurrentRoute}
+          disabled={saving}
+          variant={savedRoute === path ? "secondary" : "default"}
+          className="fixed bottom-6 right-20 z-50 rounded-full shadow-lg"
+          aria-label={lang === "es" ? "Guardar página actual" : "Save current page"}
+          title={
+            savedRoute === path
+              ? lang === "es" ? "Página guardada" : "Page saved"
+              : lang === "es" ? "Guardar y reanudar aquí al iniciar sesión" : "Save and resume here on next login"
+          }
+        >
+          <Save className="size-4" />
+        </Button>
       </div>
     </div>
   );
