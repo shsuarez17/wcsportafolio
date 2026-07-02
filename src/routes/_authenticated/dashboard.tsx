@@ -274,23 +274,41 @@ function Dashboard() {
             <EmptyChart label={t("noData")} />
           ) : (
             <>
-              <div className="h-48">
+              <div className="h-72">
                 <ResponsiveContainer>
-                  <PieChart>
+                  <PieChart margin={{ top: 20, right: 40, bottom: 20, left: 40 }}>
                     <Pie
                       data={distribution}
                       dataKey="value"
                       nameKey="name"
-                      innerRadius={55}
-                      outerRadius={85}
+                      innerRadius={50}
+                      outerRadius={90}
                       paddingAngle={2}
-                      label={({ percent }: any) => (percent && percent > 0.03 ? `${(percent * 100).toFixed(0)}%` : "")}
-                      labelLine={false}
+                      minAngle={3}
+                      isAnimationActive={false}
+                      label={({ cx, cy, midAngle, outerRadius, percent, name }: any) => {
+                        if (!percent || percent < 0.02) return null as any;
+                        const RAD = Math.PI / 180;
+                        const r = outerRadius + 14;
+                        const x = cx + r * Math.cos(-midAngle * RAD);
+                        const y = cy + r * Math.sin(-midAngle * RAD);
+                        const anchor = x > cx ? "start" : "end";
+                        const short = String(name).length > 12 ? String(name).slice(0, 12) + "…" : name;
+                        return (
+                          <text x={x} y={y} textAnchor={anchor} dominantBaseline="central" fill="#fff" fontSize={11} fontWeight={600}>
+                            {short} · {(percent * 100).toFixed(1)}%
+                          </text>
+                        ) as any;
+                      }}
+                      labelLine={{ stroke: "#64748b", strokeWidth: 1 }}
                     >
-                      {distribution.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                      {distribution.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} stroke="#0a0a0a" strokeWidth={1} />)}
                     </Pie>
                     <Tooltip
-                      formatter={(v: number) => fmtUSD(v)}
+                      formatter={(v: number, _n: any, p: any) => {
+                        const pct = invested ? (Number(v) / invested) * 100 : 0;
+                        return [`${fmtUSD(Number(v))} (${pct.toFixed(2)}%)`, p?.payload?.name];
+                      }}
                       contentStyle={{ background: "#0a0a0a", border: "1px solid var(--border)", borderRadius: 12, color: "#fff" }}
                       labelStyle={{ color: "#fff" }}
                       itemStyle={{ color: "#fff" }}
