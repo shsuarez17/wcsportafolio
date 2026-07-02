@@ -216,6 +216,7 @@ export type Database = {
           display_name: string | null
           id: string
           language: string
+          last_route: string | null
           updated_at: string
         }
         Insert: {
@@ -227,6 +228,7 @@ export type Database = {
           display_name?: string | null
           id: string
           language?: string
+          last_route?: string | null
           updated_at?: string
         }
         Update: {
@@ -238,6 +240,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           language?: string
+          last_route?: string | null
           updated_at?: string
         }
         Relationships: []
