@@ -51,7 +51,11 @@ function SettingsPage() {
 
   const addType = async () => {
     const v = newType.trim();
-    if (!v || types.includes(v)) return;
+    if (!v) return;
+    if (types.some((x) => x.toLowerCase() === v.toLowerCase())) {
+      toast.error(t("saved") ? "Ya existe un panel con ese nombre" : "Panel already exists");
+      return;
+    }
     const next = [...types, v];
     const nextSubs = { ...subtypes, [v]: subtypes[v] ?? [] };
     setTypes(next);
@@ -76,7 +80,7 @@ function SettingsPage() {
     const v = (newSubtype[panel] ?? "").trim();
     if (!v) return;
     const existing = subtypes[panel] ?? [];
-    if (existing.includes(v)) return;
+    if (existing.some((x) => x.toLowerCase() === v.toLowerCase())) return;
     const nextSubs = { ...subtypes, [panel]: [...existing, v] };
     setSubtypes(nextSubs);
     setNewSubtype({ ...newSubtype, [panel]: "" });
