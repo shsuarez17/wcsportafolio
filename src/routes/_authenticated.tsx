@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useProfile } from "@/lib/use-profile";
 import { useEffect, useState } from "react";
 import { AI_MODELS, useActiveModel } from "@/hooks/use-active-model";
+import { LicenseRedeemGate } from "@/components/license-redeem-gate";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
