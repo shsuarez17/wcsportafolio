@@ -249,7 +249,9 @@ function AuthedLayout() {
           })}
         </div>
         <main className="p-4 md:p-8 max-w-7xl mx-auto">
-          <Outlet />
+          <LicenseRedeemGate>
+            <Outlet />
+          </LicenseRedeemGate>
         </main>
 
         {showScrollTop && (
