@@ -372,8 +372,6 @@ function AssetDialog({
     if (!exists) {
       const ok = await persistPanelExtras([...panelExtras, v]);
       if (!ok) return;
-    } else {
-      toast.info(v);
     }
     setForm((f) => ({ ...f, asset_type: v }));
     setNewTypeInput("");
