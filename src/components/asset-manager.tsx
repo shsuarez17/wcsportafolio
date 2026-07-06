@@ -367,10 +367,13 @@ function AssetDialog({
     if (!v) return;
     const exists =
       allowedTypes.some((a) => a.label.toLowerCase() === v.toLowerCase() || a.value === v) ||
-      panelExtras.some((x) => x.toLowerCase() === v.toLowerCase());
+      panelExtras.some((x) => x.toLowerCase() === v.toLowerCase()) ||
+      (!forceCustomTicker && customTypes.some((x) => x.toLowerCase() === v.toLowerCase()));
     if (!exists) {
       const ok = await persistPanelExtras([...panelExtras, v]);
       if (!ok) return;
+    } else {
+      toast.info(v);
     }
     setForm((f) => ({ ...f, asset_type: v }));
     setNewTypeInput("");
