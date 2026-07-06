@@ -453,11 +453,20 @@ function AssetDialog({
     onError: (e: any) => toast.error(e?.message ?? t("error")),
   });
 
-  const typeOptions = [
-    ...allowedTypes.map((o) => ({ value: o.value as string, label: o.label })),
-    ...panelExtras.map((c) => ({ value: c, label: c })),
-    ...(forceCustomTicker ? [] : customTypes.map((c) => ({ value: c, label: c }))),
-  ];
+  const typeOptions = (() => {
+    const seen = new Set<string>();
+    const out: { value: string; label: string }[] = [];
+    const push = (value: string, label: string) => {
+      const k = value.toLowerCase();
+      if (seen.has(k)) return;
+      seen.add(k);
+      out.push({ value, label });
+    };
+    allowedTypes.forEach((o) => push(o.value as string, o.label));
+    panelExtras.forEach((c) => push(c, c));
+    if (!forceCustomTicker) customTypes.forEach((c) => push(c, c));
+    return out;
+  })();
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
