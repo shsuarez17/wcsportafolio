@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useProfile } from "@/lib/use-profile";
 import { useEffect, useState } from "react";
 import { AI_MODELS, useActiveModel } from "@/hooks/use-active-model";
+import { LicenseRedeemGate } from "@/components/license-redeem-gate";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
@@ -248,7 +249,9 @@ function AuthedLayout() {
           })}
         </div>
         <main className="p-4 md:p-8 max-w-7xl mx-auto">
-          <Outlet />
+          <LicenseRedeemGate>
+            <Outlet />
+          </LicenseRedeemGate>
         </main>
 
         {showScrollTop && (

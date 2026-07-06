@@ -13,7 +13,6 @@ import appCss from "../styles.css?url";
 import { I18nProvider } from "@/lib/i18n";
 import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
-import { LicenseGate } from "@/components/license-gate";
 import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
@@ -124,13 +123,7 @@ function RootComponent() {
       <I18nProvider>
         <AuthProvider>
           <AuthSync />
-          {hasAdminAccess ? (
-            <Outlet />
-          ) : (
-            <LicenseGate>
-              <Outlet />
-            </LicenseGate>
-          )}
+          <Outlet />
           <Toaster richColors position="top-right" />
         </AuthProvider>
       </I18nProvider>
