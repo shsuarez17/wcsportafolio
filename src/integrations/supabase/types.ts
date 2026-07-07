@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_codes: {
+        Row: {
+          buyer_email: string | null
+          code: string
+          created_at: string
+          id: string
+          source: string
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          buyer_email?: string | null
+          code: string
+          created_at?: string
+          id?: string
+          source?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          buyer_email?: string | null
+          code?: string
+          created_at?: string
+          id?: string
+          source?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: []
+      }
       fx_rates: {
         Row: {
           pair: string
@@ -438,6 +468,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       watchlist: {
         Row: {
           asset_kind: string
@@ -473,9 +524,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
+      app_role: "admin" | "user"
       asset_type: "STOCK_US" | "STOCK_CO" | "ETF" | "CRYPTO" | "BOND" | "OTHER"
       recur_freq: "WEEKLY" | "BIWEEKLY" | "MONTHLY"
       tx_type: "BUY" | "SELL" | "DEPOSIT" | "DIVIDEND"
@@ -606,6 +664,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "user"],
       asset_type: ["STOCK_US", "STOCK_CO", "ETF", "CRYPTO", "BOND", "OTHER"],
       recur_freq: ["WEEKLY", "BIWEEKLY", "MONTHLY"],
       tx_type: ["BUY", "SELL", "DEPOSIT", "DIVIDEND"],
