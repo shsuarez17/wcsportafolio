@@ -26,6 +26,7 @@ import { Route as AuthenticatedCryptoRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedCustomTypeRouteImport } from './routes/_authenticated/custom/$type'
 import { Route as ApiPublicHooksRefreshPricesRouteImport } from './routes/api/public/hooks/refresh-prices'
+import { Route as ApiPublicHooksHotmartRouteImport } from './routes/api/public/hooks/hotmart'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -113,6 +114,11 @@ const ApiPublicHooksRefreshPricesRoute =
     path: '/api/public/hooks/refresh-prices',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksHotmartRoute = ApiPublicHooksHotmartRouteImport.update({
+  id: '/api/public/hooks/hotmart',
+  path: '/api/public/hooks/hotmart',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -130,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/stocks': typeof AuthenticatedStocksRoute
   '/watchlist': typeof AuthenticatedWatchlistRoute
   '/custom/$type': typeof AuthenticatedCustomTypeRoute
+  '/api/public/hooks/hotmart': typeof ApiPublicHooksHotmartRoute
   '/api/public/hooks/refresh-prices': typeof ApiPublicHooksRefreshPricesRoute
 }
 export interface FileRoutesByTo {
@@ -148,6 +155,7 @@ export interface FileRoutesByTo {
   '/stocks': typeof AuthenticatedStocksRoute
   '/watchlist': typeof AuthenticatedWatchlistRoute
   '/custom/$type': typeof AuthenticatedCustomTypeRoute
+  '/api/public/hooks/hotmart': typeof ApiPublicHooksHotmartRoute
   '/api/public/hooks/refresh-prices': typeof ApiPublicHooksRefreshPricesRoute
 }
 export interface FileRoutesById {
@@ -168,6 +176,7 @@ export interface FileRoutesById {
   '/_authenticated/stocks': typeof AuthenticatedStocksRoute
   '/_authenticated/watchlist': typeof AuthenticatedWatchlistRoute
   '/_authenticated/custom/$type': typeof AuthenticatedCustomTypeRoute
+  '/api/public/hooks/hotmart': typeof ApiPublicHooksHotmartRoute
   '/api/public/hooks/refresh-prices': typeof ApiPublicHooksRefreshPricesRoute
 }
 export interface FileRouteTypes {
@@ -188,6 +197,7 @@ export interface FileRouteTypes {
     | '/stocks'
     | '/watchlist'
     | '/custom/$type'
+    | '/api/public/hooks/hotmart'
     | '/api/public/hooks/refresh-prices'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -206,6 +216,7 @@ export interface FileRouteTypes {
     | '/stocks'
     | '/watchlist'
     | '/custom/$type'
+    | '/api/public/hooks/hotmart'
     | '/api/public/hooks/refresh-prices'
   id:
     | '__root__'
@@ -225,6 +236,7 @@ export interface FileRouteTypes {
     | '/_authenticated/stocks'
     | '/_authenticated/watchlist'
     | '/_authenticated/custom/$type'
+    | '/api/public/hooks/hotmart'
     | '/api/public/hooks/refresh-prices'
   fileRoutesById: FileRoutesById
 }
@@ -234,6 +246,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiPublicHooksHotmartRoute: typeof ApiPublicHooksHotmartRoute
   ApiPublicHooksRefreshPricesRoute: typeof ApiPublicHooksRefreshPricesRoute
 }
 
@@ -358,6 +371,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksRefreshPricesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/hotmart': {
+      id: '/api/public/hooks/hotmart'
+      path: '/api/public/hooks/hotmart'
+      fullPath: '/api/public/hooks/hotmart'
+      preLoaderRoute: typeof ApiPublicHooksHotmartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -399,6 +419,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiPublicHooksHotmartRoute: ApiPublicHooksHotmartRoute,
   ApiPublicHooksRefreshPricesRoute: ApiPublicHooksRefreshPricesRoute,
 }
 export const routeTree = rootRouteImport
