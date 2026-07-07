@@ -95,8 +95,9 @@ function RedeemScreen({ onRedeemed }: { onRedeemed: () => void }) {
         >
           <Input
             value={key}
-            onChange={(e) => setKey(e.target.value)}
-            placeholder="XXXX-XXXX-XXXX-XXXX"
+            onChange={(e) => setKey(e.target.value.toUpperCase())}
+            placeholder="XXXX-XXXX-XXXX"
+            maxLength={14}
             autoFocus
             className="text-center tracking-widest font-mono uppercase h-11"
           />

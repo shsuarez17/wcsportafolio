@@ -8,6 +8,7 @@ import { useProfile } from "@/lib/use-profile";
 import { useEffect, useState } from "react";
 import { AI_MODELS, useActiveModel } from "@/hooks/use-active-model";
 import { LicenseRedeemGate } from "@/components/license-redeem-gate";
+import { AccessCodesAdminButton } from "@/components/access-codes-admin";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
@@ -253,6 +254,7 @@ function AuthedLayout() {
             <Outlet />
           </LicenseRedeemGate>
         </main>
+        <AccessCodesAdminButton />
 
         {showScrollTop && (
           <Button
