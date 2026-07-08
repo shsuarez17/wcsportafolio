@@ -31,7 +31,18 @@ async function assertAdmin(ctx: { supabase: any; userId: string }) {
 export const getMyLicense = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Admins bypass the license gate (role granted server-side only).
+    const { data: roleRow } = await supabaseAdmin
+      .from("user_roles")
+      .select("user_id")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (roleRow) {
+      return { license_key: "ADMIN", created_at: new Date().toISOString() };
+    }
+    const { data, error } = await supabaseAdmin
       .from("access_codes")
       .select("code, used_at")
       .eq("used_by", context.userId)

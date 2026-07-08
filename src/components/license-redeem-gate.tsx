@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { KeyRound, Loader2, LogOut } from "lucide-react";
@@ -7,48 +7,15 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getMyLicense, redeemLicense } from "@/lib/license.functions";
-
-const ADMIN_KEY = "wcs_admin";
+import { useState } from "react";
 
 export function LicenseRedeemGate({ children }: { children: ReactNode }) {
-  const [adminBypass, setAdminBypass] = useState<boolean | null>(null);
-  const aCountRef = useRef(0);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("admin") === "true") {
-      localStorage.setItem(ADMIN_KEY, "true");
-      setAdminBypass(true);
-      return;
-    }
-    setAdminBypass(localStorage.getItem(ADMIN_KEY) === "true");
-  }, []);
-
   const licenseQ = useQuery({
     queryKey: ["my-license"],
     queryFn: () => getMyLicense(),
-    enabled: adminBypass === false,
     retry: false,
   });
 
-  useEffect(() => {
-    if (adminBypass !== false) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "a" || e.key === "A") {
-        aCountRef.current += 1;
-        if (aCountRef.current >= 5) {
-          localStorage.setItem(ADMIN_KEY, "true");
-          setAdminBypass(true);
-        }
-      } else if (e.key.length === 1) aCountRef.current = 0;
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [adminBypass]);
-
-  if (adminBypass === null) return null;
-  if (adminBypass) return <>{children}</>;
   if (licenseQ.isLoading) return null;
   if (licenseQ.data) return <>{children}</>;
 
