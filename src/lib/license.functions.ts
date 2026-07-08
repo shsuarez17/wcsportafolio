@@ -16,10 +16,13 @@ function randomCode() {
 }
 
 async function assertAdmin(ctx: { supabase: any; userId: string }) {
-  const { data, error } = await ctx.supabase.rpc("has_role", {
-    _user_id: ctx.userId,
-    _role: "admin",
-  });
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
+    .from("user_roles")
+    .select("user_id")
+    .eq("user_id", ctx.userId)
+    .eq("role", "admin")
+    .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("No autorizado");
 }
@@ -47,17 +50,17 @@ export const redeemLicense = createServerFn({ method: "POST" })
     if (!CODE_RE.test(code)) {
       throw new Error("Formato inválido. Usa XXXX-XXXX-XXXX.");
     }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // Already redeemed by this user?
-    const { data: mine } = await context.supabase
+    const { data: mine } = await supabaseAdmin
       .from("access_codes")
       .select("code")
       .eq("used_by", context.userId)
       .maybeSingle();
     if (mine) return { ok: true };
 
-    // Find the row (RLS: authenticated may read unused codes, or their own).
-    const { data: row, error: rowErr } = await context.supabase
+    const { data: row, error: rowErr } = await supabaseAdmin
       .from("access_codes")
       .select("id, used_by")
       .eq("code", code)
@@ -69,8 +72,8 @@ export const redeemLicense = createServerFn({ method: "POST" })
       throw new Error("Este código ya fue canjeado por otra cuenta.");
     }
 
-    // Claim it (RLS UPDATE policy: only if used_by is null and new value = auth.uid()).
-    const { data: updated, error: updErr } = await context.supabase
+    // Atomic claim: only succeeds if still unclaimed.
+    const { data: updated, error: updErr } = await supabaseAdmin
       .from("access_codes")
       .update({ used_by: context.userId, used_at: new Date().toISOString() })
       .eq("id", row.id)
@@ -133,9 +136,12 @@ export const deleteAccessCode = createServerFn({ method: "POST" })
 export const amIAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin
+      .from("user_roles")
+      .select("user_id")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .maybeSingle();
     return { admin: Boolean(data) };
   });
